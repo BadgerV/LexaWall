@@ -68,6 +68,7 @@ class LexaWallWallpaperService : WallpaperService() {
             super.onCreate(surfaceHolder)
             initPaints()
             readCurrentWallpaperData()
+            rotationJob?.cancel()()
             PrefsManager.saveWallpaperSet(applicationContext, true)
             val filter = IntentFilter().apply {
                 addAction(Intent.ACTION_SCREEN_OFF)
@@ -180,6 +181,7 @@ class LexaWallWallpaperService : WallpaperService() {
 
         fun refreshWallpaper() {
             readCurrentWallpaperData()
+            rotationJob?.cancel()()
             if (isVisible) {
                 startRotationTimer()
             }
@@ -362,7 +364,8 @@ class LexaWallWallpaperService : WallpaperService() {
             }
         }
 
-        private fun readCurrentWallpaperData() {
+        private fun readCurrentWallpaperData()
+            rotationJob?.cancel()() {
             val (text, definition, pos) = WallpaperWordManager.getCurrentWord(applicationContext)
             wordText = text
             wordDefinition = definition

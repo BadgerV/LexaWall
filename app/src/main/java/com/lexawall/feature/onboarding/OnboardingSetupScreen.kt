@@ -152,9 +152,9 @@ fun OnboardingSetupScreen(
                             )
                         }
                         try {
-                            context.startActivity(intent)
+                            wallpaperLauncher.launch(intent)
                         } catch (_: Exception) {
-                            context.startActivity(Intent(Intent.ACTION_SET_WALLPAPER))
+                            wallpaperLauncher.launch(Intent(Intent.ACTION_SET_WALLPAPER))
                         }
                     })
                     Spacer(Modifier.height(8.dp))
