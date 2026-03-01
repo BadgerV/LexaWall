@@ -1,0 +1,7 @@
+-keep class com.lexawall.data.local.entities.** { *; }
+-keep class com.lexawall.domain.model.** { *; }
+-keepattributes Annotation
+-keep class com.lexawall.notifications.** { *; }
+-keep class com.lexawall.wallpaper.** { *; }
+-keep class androidx.compose.** { *; }
+-dontnote kotlin.internal.**
