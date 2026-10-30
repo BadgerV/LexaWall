@@ -17,6 +17,9 @@ interface QuizSessionDao {
     @Query("SELECT * FROM quiz_sessions ORDER BY id DESC")
     suspend fun getAllSessions(): List<QuizSessionEntity>
 
+    @Query("SELECT * FROM quiz_sessions WHERE datestamp = :date ORDER BY id DESC")
+    suspend fun getSessionsForDate(date: String): List<QuizSessionEntity>
+
     @Query("DELETE FROM quiz_sessions")
     suspend fun clearAll()
 }

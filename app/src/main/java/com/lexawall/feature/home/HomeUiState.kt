@@ -8,6 +8,7 @@ data class HomeUiState(
     val wallpaperWord: Word = Word("", "", "", "", "", ""),
     val stats: UserStats = UserStats(0, 0, 0, 0),
     val currentTitle: String = "The Curious",
+    val dailyProgress: DailyProgressSnapshot = DailyProgressSnapshot(),
     val isLoading: Boolean = true,
     val showWallpaperBanner: Boolean = false,
     val showLevelCompletion: Boolean = false,

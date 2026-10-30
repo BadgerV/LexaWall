@@ -16,9 +16,17 @@ class DatabaseSeeder(
 ) {
     suspend fun seedIfNeeded() {
         val existingWordCount = withContext(Dispatchers.IO) { database.wordDao().getWordCount() }
-        if (PrefsManager.isDbSeeded(context) && existingWordCount > 0) {
+        if (PrefsManager.isDbSeeded(context) && existingWordCount >= MINIMUM_WORD_COUNT) {
             LexaWallLogger.d(TAG, "Database already seeded. Skipping.")
             return
+        }
+
+        if (existingWordCount in 1 until MINIMUM_WORD_COUNT) {
+            LexaWallLogger.w(
+                TAG,
+                "Word count too low ($existingWordCount). Forcing reseed."
+            )
+            PrefsManager.saveDbSeeded(context, false)
         }
 
         seedInternal()
@@ -32,34 +40,38 @@ class DatabaseSeeder(
 
     private suspend fun seedInternal() {
         withContext(Dispatchers.IO) {
-            var totalLines = 0
+            var totalRows = 0
             var skippedRows = 0
+
+            // Keep streak/level/badges; replace word dataset and dependent progress.
+            database.wordDao().clearAll()
+            database.userProgressDao().clearAll()
+            PrefsManager.saveDailyPoolDate(context, "")
+            PrefsManager.saveDailyPoolWordIds(context, "")
+            PrefsManager.saveWanderDate(context, "")
+            PrefsManager.saveWanderWordIds(context, "")
+            PrefsManager.saveWanderSeenAllIds(context, "")
 
             val words = mutableListOf<WordEntity>()
 
             context.assets.open(ASSET_FILE_NAME).bufferedReader().use { reader ->
-                reader.readLine() // skip header
+                val allRows = parseCsvRows(reader.readText())
+                if (allRows.size <= 1) {
+                    LexaWallLogger.w(TAG, "CSV contains no data rows.")
+                    return@withContext
+                }
 
-                var line = reader.readLine()
-                while (line != null) {
-                    totalLines++
-
-                    val parsed = parseCsvLine(line)
-                    val word = parsed?.toWordEntityOrNull()
-                    if (word == null) {
-                        skippedRows++
-                    } else {
-                        words.add(word)
-                    }
-
-                    line = reader.readLine()
+                for (row in allRows.drop(1)) { // skip header
+                    totalRows++
+                    val word = row.toWordEntityOrNull()
+                    if (word == null) skippedRows++ else words.add(word)
                 }
             }
 
             if (words.isEmpty()) {
                 LexaWallLogger.w(
                     TAG,
-                    "No valid words parsed from CSV. totalLines=$totalLines, skippedRows=$skippedRows"
+                    "No valid words parsed from CSV. totalRows=$totalRows, skippedRows=$skippedRows"
                 )
                 return@withContext
             }
@@ -91,13 +103,13 @@ class DatabaseSeeder(
             PrefsManager.saveDbSeeded(context, true)
             LexaWallLogger.d(
                 TAG,
-                "Database seed complete. totalLines=$totalLines, insertedWords=${words.size}, skippedRows=$skippedRows"
+                "Database seed complete. totalRows=$totalRows, insertedWords=${words.size}, skippedRows=$skippedRows"
             )
         }
     }
 
     private fun List<String>.toWordEntityOrNull(): WordEntity? {
-        if (size != EXPECTED_COLUMN_COUNT) return null
+        if (size < REQUIRED_COLUMN_COUNT) return null
 
         val id = this[0].trim()
         val word = this[1].trim()
@@ -107,6 +119,8 @@ class DatabaseSeeder(
         val exampleSentence = this[5].trim()
         val notificationLine1 = this[6].trim()
         val notificationLine2 = this[7].trim()
+        // Column 14 (index 14) = lexa_says — a literary passage using the word
+        val lexaSays = this.getOrNull(14)?.trim()?.ifBlank { null }
 
         if (
             id.isEmpty() ||
@@ -131,23 +145,23 @@ class DatabaseSeeder(
             notificationLine1 = notificationLine1,
             notificationLine2 = notificationLine2,
             pronunciationIpa = null,
-            etymology = null
+            etymology = null,
+            lexaSays = lexaSays
         )
     }
 
-    private fun parseCsvLine(line: String): List<String>? {
-        if (line.isBlank()) return null
-
+    private fun parseCsvRows(text: String): List<List<String>> {
+        if (text.isBlank()) return emptyList()
+        val rows = mutableListOf<List<String>>()
         val fields = mutableListOf<String>()
         val current = StringBuilder()
         var inQuotes = false
         var i = 0
-
-        while (i < line.length) {
-            val ch = line[i]
+        while (i < text.length) {
+            val ch = text[i]
             when {
                 ch == '"' -> {
-                    if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
+                    if (inQuotes && i + 1 < text.length && text[i + 1] == '"') {
                         current.append('"')
                         i++
                     } else {
@@ -158,20 +172,30 @@ class DatabaseSeeder(
                     fields.add(current.toString())
                     current.setLength(0)
                 }
+                (ch == '\n' || ch == '\r') && !inQuotes -> {
+                    if (ch == '\r' && i + 1 < text.length && text[i + 1] == '\n') i++
+                    fields.add(current.toString())
+                    current.setLength(0)
+                    if (fields.any { it.isNotBlank() }) {
+                        rows.add(fields.toList())
+                    }
+                    fields.clear()
+                }
                 else -> current.append(ch)
             }
             i++
         }
-
-        if (inQuotes) return null
-
-        fields.add(current.toString())
-        return fields
+        if (current.isNotEmpty() || fields.isNotEmpty()) {
+            fields.add(current.toString())
+            if (fields.any { it.isNotBlank() }) rows.add(fields.toList())
+        }
+        return rows
     }
 
     companion object {
         private const val TAG = "DatabaseSeeder"
-        private const val ASSET_FILE_NAME = "lexawall_words.csv"
-        private const val EXPECTED_COLUMN_COUNT = 8
+        private const val ASSET_FILE_NAME = "lexawall_words_v2.csv"
+        private const val REQUIRED_COLUMN_COUNT = 8
+        private const val MINIMUM_WORD_COUNT = 50
     }
 }

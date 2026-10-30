@@ -399,7 +399,7 @@ fun ProgressScreen(
                             }
                         }
                     }
-                    } // end if words.isNotEmpty()
+                    }
 
                     item {
                         Spacer(Modifier.height(120.dp))

@@ -30,34 +30,27 @@ object WallpaperWordManager {
 
         PrefsManager.saveCurrentWordId(context, wordId)
         LexaWallLogger.d("Rotation", "Current word id saved: $wordId")
-        LexaWallWallpaperService.refresh()
-        LexaWallLogger.d("Rotation", "Wallpaper refresh requested")
     }
 
-    fun updateCurrentWord(context: Context) {
+    fun updateCurrentWord(context: Context): Boolean {
         val nextWord = runBlocking(Dispatchers.IO) {
             val wordDao = DatabaseModule.getInstance(context.applicationContext).wordDao()
-            val dailyWords = DailyWordPool.getDailyWords(context.applicationContext, wordDao)
-            val allWords = wordDao.getAllWords()
-            if (allWords.isEmpty()) return@runBlocking null
-
-            val dailyIds = dailyWords.map { it.id }.toSet()
-            val extraWords = allWords
-                .filterNot { it.id in dailyIds }
-                .shuffled()
-                .take(10)
-            val rotationPool = (dailyWords + extraWords)
-                .ifEmpty { allWords.shuffled().take(25) }
-                .distinctBy { it.id }
+            val rotationPool = DailyWordPool.getWallpaperWords(context.applicationContext, wordDao)
+            if (rotationPool.isEmpty()) return@runBlocking null
 
             val currentWordId = PrefsManager.getCurrentWordId(context)
-            val candidates = if (!currentWordId.isNullOrBlank() && rotationPool.size > 1) {
-                rotationPool.filterNot { it.id == currentWordId }
-            } else {
-                rotationPool
+            if (rotationPool.size == 1) {
+                return@runBlocking rotationPool.first()
             }
-            candidates.randomOrNull()
-        } ?: return
+
+            val currentIndex = rotationPool.indexOfFirst { it.id == currentWordId }
+            if (currentIndex >= 0) {
+                rotationPool[(currentIndex + 1) % rotationPool.size]
+            } else {
+                // Random start, then deterministic cycling for even distribution.
+                rotationPool.random()
+            }
+        } ?: return false
         LexaWallLogger.d("Rotation", "Selected next word: ${nextWord.word} (${nextWord.id})")
 
         updateCurrentWord(
@@ -68,6 +61,20 @@ object WallpaperWordManager {
             exampleSentence = nextWord.exampleSentence,
             wordId = nextWord.id
         )
+        PrefsManager.saveLastWallpaperRotationAt(context, System.currentTimeMillis())
+        LexaWallWallpaperService.refresh()
+        LexaWallLogger.d("Rotation", "Wallpaper refresh requested")
+        return true
+    }
+
+    fun rotateIfDue(context: Context, force: Boolean = false): Boolean {
+        val now = System.currentTimeMillis()
+        val last = PrefsManager.getLastWallpaperRotationAt(context)
+        val interval = resolveRotationIntervalMs(PrefsManager.getRotationSpeed(context))
+        val due = force || last == 0L || (now - last) >= interval
+        if (!due) return false
+
+        return updateCurrentWord(context)
     }
 
     fun getCurrentWord(context: Context): Triple<String, String, String> {
@@ -93,6 +100,15 @@ object WallpaperWordManager {
 
     fun getRotationSpeed(context: Context): String {
         return PrefsManager.getRotationSpeed(context)
+    }
+
+    private fun resolveRotationIntervalMs(raw: String?): Long {
+        return when (raw?.trim()?.lowercase()) {
+            "1min", "1 min", "1minute", "1 minute", "1 minutes" -> 60_000L
+            "5min", "5 min", "5minute", "5 minute", "5 minutes" -> 300_000L
+            "10min", "10 min", "10minutes", "10 minute", "10 minutes", null, "" -> 600_000L
+            else -> 600_000L
+        }
     }
 
     private const val PREFS_NAME = "lexawall_prefs"

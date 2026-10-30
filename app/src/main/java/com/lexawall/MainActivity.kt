@@ -25,6 +25,7 @@ import com.lexawall.data.local.PrefsManager
 import com.lexawall.data.local.seeder.DatabaseSeeder
 import com.lexawall.feature.home.HomeViewModel
 import com.lexawall.notifications.NotificationScheduler
+import com.lexawall.notifications.NotificationChannels
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -41,10 +42,17 @@ class MainActivity : ComponentActivity() {
         window.statusBarColor = Color.TRANSPARENT
         window.navigationBarColor = Color.TRANSPARENT
         enableEdgeToEdge()
+        NotificationChannels.ensureBaselineChannels(applicationContext)
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val database = DatabaseModule.getInstance(applicationContext)
+                val prefs = applicationContext.getSharedPreferences("lexawall_prefs", MODE_PRIVATE)
+                val csvVersion = prefs.getString("csv_version", null)
+                if (csvVersion != "v2") {
+                    PrefsManager.clearDbSeeded(applicationContext)
+                    prefs.edit().putString("csv_version", "v2").apply()
+                }
                 if (!PrefsManager.isWordsMigrated(applicationContext)) {
                     database.userProgressDao().clearAll()
                     database.quizSessionDao().clearAll()
@@ -57,14 +65,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        intent?.data?.let { data ->
-            if (data.scheme == "lexawall" && data.host == "word") {
-                val wordId = data.pathSegments.firstOrNull()
-                if (!wordId.isNullOrBlank()) {
-                    pendingDeepLinkWordId.value = wordId
-                }
-            }
-        }
+        handleNavigationIntent(intent)
 
         setContent {
             LexaWallTheme {
@@ -85,12 +86,40 @@ class MainActivity : ComponentActivity() {
         homeViewModel.refreshWallpaperWord()
     }
 
+    override fun onNewIntent(intent: android.content.Intent?) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNavigationIntent(intent)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         LexaSpeaker.shutdown()
     }
 
     companion object {
+        const val ACTION_OPEN_WORD_DROP = "com.lexawall.OPEN_WORD_DROP"
+        const val ACTION_OPEN_BONUS_CHALLENGE = "com.lexawall.OPEN_BONUS_CHALLENGE"
+        const val EXTRA_CHALLENGE_TYPE = "challenge_type"
         val pendingDeepLinkWordId: MutableState<String?> = mutableStateOf(null)
+        val pendingOpenWordDrop: MutableState<Boolean> = mutableStateOf(false)
+        val pendingBonusChallengeType: MutableState<String?> = mutableStateOf(null)
+    }
+
+    private fun handleNavigationIntent(intent: android.content.Intent?) {
+        if (intent?.action == ACTION_OPEN_WORD_DROP) {
+            pendingOpenWordDrop.value = true
+        }
+        if (intent?.action == ACTION_OPEN_BONUS_CHALLENGE) {
+            pendingBonusChallengeType.value = intent.getStringExtra(EXTRA_CHALLENGE_TYPE)
+        }
+        intent?.data?.let { data ->
+            if (data.scheme == "lexawall" && data.host == "word") {
+                val wordId = data.pathSegments.firstOrNull()
+                if (!wordId.isNullOrBlank()) {
+                    pendingDeepLinkWordId.value = wordId
+                }
+            }
+        }
     }
 }

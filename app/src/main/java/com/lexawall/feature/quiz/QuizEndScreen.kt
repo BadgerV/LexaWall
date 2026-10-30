@@ -23,6 +23,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,6 +32,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,8 +46,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.lexawall.core.components.PrimaryButton
 import com.lexawall.core.ui.*
 import com.lexawall.core.utils.DevicePerformance
+import com.lexawall.data.local.DatabaseModule
 import com.lexawall.data.local.PrefsManager
+import com.lexawall.utils.ShareCardGenerator
 import com.lexawall.utils.LexaWallLogger
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun QuizEndScreen(
@@ -66,6 +74,8 @@ fun QuizEndScreen(
     val displayedTotal = quizUiState.questions.size.takeIf { it > 0 } ?: total
     val displayedScore = correctAnswers
     val hasGraduationToday = remember { !PrefsManager.getGraduationWordId(context).isNullOrBlank() }
+    val currentWallpaperWordId = remember { PrefsManager.getCurrentWordId(context) }
+    val shareScope = rememberCoroutineScope()
     var animatedStreak by remember { mutableIntStateOf(0) }
     var showFlame by remember { mutableStateOf(false) }
     var flameScaleTarget by remember { mutableStateOf(0f) }
@@ -278,12 +288,51 @@ fun QuizEndScreen(
                 textAlign = TextAlign.Center
             )
         }
-        Box(
-            Modifier
+        Column(
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 24.dp)
+                .padding(horizontal = 24.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             PrimaryButton("Back to home", onBackToHome)
+            if (!currentWallpaperWordId.isNullOrBlank()) {
+                OutlinedButton(
+                    onClick = {
+                        shareScope.launch {
+                            val wordEntity = withContext(Dispatchers.IO) {
+                                DatabaseModule
+                                    .getInstance(context)
+                                    .wordDao()
+                                    .getWordById(currentWallpaperWordId)
+                            }
+                            if (wordEntity != null) {
+                                ShareCardGenerator.generateAndShareWord(
+                                    context = context,
+                                    word = wordEntity.word,
+                                    definition = wordEntity.definition,
+                                    partOfSpeech = wordEntity.partOfSpeech
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = LexaColors.Primary
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = LexaColors.Primary,
+                        containerColor = Color.Transparent
+                    )
+                ) {
+                    Text(
+                        text = "Share today's word ↑",
+                        style = LexaType.labelMedium.copy(fontFamily = DmMono)
+                    )
+                }
+            }
         }
         IconButton(
             onClick = onBack,

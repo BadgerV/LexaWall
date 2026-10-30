@@ -22,7 +22,7 @@ object DatabaseModule {
                 LexaWallDatabase::class.java,
                 "lexawall.db"
             )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build()
                 .also { db ->
                 instance = db
@@ -98,6 +98,240 @@ object DatabaseModule {
                 """
                 ALTER TABLE quiz_sessions
                 ADD COLUMN xpEarned INTEGER NOT NULL DEFAULT 0
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                ALTER TABLE words
+                ADD COLUMN lexaSays TEXT
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS wallpaper_quiz_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    wordId TEXT NOT NULL,
+                    correct INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_wallpaper_quiz_sessions_timestamp
+                ON wallpaper_quiz_sessions (timestamp)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_wallpaper_quiz_sessions_wordId
+                ON wallpaper_quiz_sessions (wordId)
+                """.trimIndent()
+            )
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS bonus_challenge_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    challengeType TEXT NOT NULL,
+                    completed INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_bonus_challenge_sessions_timestamp
+                ON bonus_challenge_sessions (timestamp)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_bonus_challenge_sessions_completed
+                ON bonus_challenge_sessions (completed)
+                """.trimIndent()
+            )
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS word_hunt_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    date TEXT NOT NULL,
+                    wordId TEXT NOT NULL,
+                    found INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_word_hunt_sessions_date_wordId
+                ON word_hunt_sessions (date, wordId)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_word_hunt_sessions_date_found
+                ON word_hunt_sessions (date, found)
+                """.trimIndent()
+            )
+        }
+    }
+
+    // v4 aligns schema versioning for existing installs that already advanced to 4.
+    // No structural changes are required beyond confirming the current schema.
+    private val MIGRATION_3_4 = object : Migration(3, 4) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS wallpaper_quiz_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    wordId TEXT NOT NULL,
+                    correct INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS bonus_challenge_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    challengeType TEXT NOT NULL,
+                    completed INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS word_hunt_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    date TEXT NOT NULL,
+                    wordId TEXT NOT NULL,
+                    found INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_wallpaper_quiz_sessions_timestamp
+                ON wallpaper_quiz_sessions (timestamp)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_wallpaper_quiz_sessions_wordId
+                ON wallpaper_quiz_sessions (wordId)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_bonus_challenge_sessions_timestamp
+                ON bonus_challenge_sessions (timestamp)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_bonus_challenge_sessions_completed
+                ON bonus_challenge_sessions (completed)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_word_hunt_sessions_date_wordId
+                ON word_hunt_sessions (date, wordId)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_word_hunt_sessions_date_found
+                ON word_hunt_sessions (date, found)
+                """.trimIndent()
+            )
+        }
+    }
+
+    // v5 reconciles installs that reached v4 with stale or partial schema for new feature tables.
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("DROP TABLE IF EXISTS wallpaper_quiz_sessions")
+            db.execSQL("DROP TABLE IF EXISTS bonus_challenge_sessions")
+            db.execSQL("DROP TABLE IF EXISTS word_hunt_sessions")
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS wallpaper_quiz_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    wordId TEXT NOT NULL,
+                    correct INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_wallpaper_quiz_sessions_timestamp
+                ON wallpaper_quiz_sessions (timestamp)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_wallpaper_quiz_sessions_wordId
+                ON wallpaper_quiz_sessions (wordId)
+                """.trimIndent()
+            )
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS bonus_challenge_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    timestamp TEXT NOT NULL,
+                    challengeType TEXT NOT NULL,
+                    completed INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_bonus_challenge_sessions_timestamp
+                ON bonus_challenge_sessions (timestamp)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_bonus_challenge_sessions_completed
+                ON bonus_challenge_sessions (completed)
+                """.trimIndent()
+            )
+
+            db.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS word_hunt_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    date TEXT NOT NULL,
+                    wordId TEXT NOT NULL,
+                    found INTEGER NOT NULL,
+                    xpEarned INTEGER NOT NULL
+                )
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_word_hunt_sessions_date_wordId
+                ON word_hunt_sessions (date, wordId)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                CREATE INDEX IF NOT EXISTS index_word_hunt_sessions_date_found
+                ON word_hunt_sessions (date, found)
                 """.trimIndent()
             )
         }

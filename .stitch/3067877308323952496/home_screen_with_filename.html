@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LexaWall Dashboard Quiz Available</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&amp;family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "background-dark": "#0D0D0F", 
+                        "surface-dark": "#1A1A22",
+                        "accent-violet": "#7C5CBF",
+                        "accent-amber": "#FFB84C",
+                        "text-muted": "#8F90A6",
+                    },
+                    fontFamily: {
+                        "sans": ["DM Sans", "sans-serif"],
+                        "serif": ["Playfair Display", "serif"],
+                        "mono": ["DM Mono", "monospace"],
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            min-height: 100vh;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark min-h-screen text-slate-100 font-sans antialiased overflow-x-hidden pb-24">
+<header class="flex justify-between items-center px-6 pt-12 pb-6">
+<div class="flex flex-col gap-1">
+<h2 class="font-mono text-text-muted text-xs tracking-widest uppercase font-medium">GOOD MORNING</h2>
+<h1 class="text-3xl font-bold tracking-tight text-white font-serif italic">The Curious</h1>
+</div>
+<div class="flex items-center gap-1 bg-[#26262E] px-3 py-1.5 rounded-full border border-white/5">
+<span class="text-lg">🔥</span>
+<span class="font-mono text-sm font-bold text-accent-amber">14</span>
+</div>
+</header>
+<main class="flex flex-col gap-6 px-4">
+<section class="grid grid-cols-4 gap-2">
+<div class="flex flex-col items-center justify-center gap-1 bg-surface-dark rounded-[16px] p-3 text-center h-24">
+<span class="text-xl mb-1">📖</span>
+<span class="text-xs font-bold text-white block">3 words</span>
+<span class="text-[10px] text-text-muted font-medium">Today</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 bg-surface-dark rounded-[16px] p-3 text-center h-24">
+<span class="text-xl mb-1">⚡</span>
+<span class="text-xs font-bold text-white block">120 XP</span>
+<span class="text-[10px] text-text-muted font-medium">Earned</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 bg-surface-dark rounded-[16px] p-3 text-center h-24">
+<span class="text-xl mb-1">🔥</span>
+<span class="text-xs font-bold text-white block">14</span>
+<span class="text-[10px] text-text-muted font-medium">Streak</span>
+</div>
+<div class="flex flex-col items-center justify-center gap-1 bg-surface-dark rounded-[16px] p-3 text-center h-24">
+<span class="text-xl mb-1">⭐</span>
+<span class="text-xs font-bold text-white block">Lv. 5</span>
+<span class="text-[10px] text-text-muted font-medium">Explorer</span>
+</div>
+</section>
+<section class="bg-surface-dark rounded-full px-4 py-3 flex items-center gap-3 border border-white/5">
+<div class="w-8 h-8 rounded-full bg-[#2C2C35] flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-text-muted" style="font-size: 18px;">wallpaper</span>
+</div>
+<p class="text-xs text-text-muted leading-tight">Set LexaWall as your wallpaper for passive learning</p>
+</section>
+<section class="relative overflow-hidden rounded-[16px] bg-gradient-to-br from-[#5B4294] to-[#392465] p-6 shadow-xl">
+<div class="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+<div class="relative z-10 flex flex-col h-full justify-between min-h-[140px]">
+<div>
+<span class="font-mono text-[10px] uppercase tracking-widest text-white/70 mb-2 block">TODAY'S WORD DROP</span>
+<h3 class="text-2xl font-bold text-white mb-1">12 Questions</h3>
+<p class="text-white/60 text-sm font-medium">~4 minutes</p>
+</div>
+<div class="flex justify-end mt-4">
+<button class="bg-white text-accent-violet hover:bg-gray-100 px-5 py-2.5 rounded-full text-sm font-bold transition-all shadow-lg flex items-center gap-2">
+                        Start Word Drop <span class="material-symbols-outlined text-sm font-bold">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<section class="relative overflow-hidden rounded-[16px] bg-gradient-to-b from-[#2E2244] to-[#121216] border border-white/5 p-6 min-h-[300px] flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between mb-4">
+<span class="font-mono text-accent-violet text-sm font-bold">[adj.]</span>
+<div class="flex gap-2">
+<span class="bg-white/10 px-2.5 py-1 rounded-full text-[10px] text-white/70 backdrop-blur-sm">adjective</span>
+<span class="bg-white/10 px-2.5 py-1 rounded-full text-[10px] text-white/70 backdrop-blur-sm">intermediate</span>
+</div>
+</div>
+<h2 class="text-5xl font-serif text-white mb-4 tracking-tight">Ephemeral</h2>
+<p class="text-lg text-text-muted font-medium leading-relaxed">lasting for only a very short time</p>
+</div>
+<div class="mt-8 pt-6 border-t border-white/10 flex justify-center">
+<span class="font-mono text-[10px] uppercase tracking-widest text-text-muted flex items-center gap-2">
+                    TODAY'S WORD DROP STARTS HERE 
+                    <span class="material-symbols-outlined text-sm">arrow_downward</span>
+</span>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-[#0D0D0F]/90 backdrop-blur-xl border-t border-white/5 pb-6 pt-3 px-6">
+<div class="flex justify-between items-end max-w-lg mx-auto">
+<a class="flex flex-col items-center gap-1 text-accent-violet group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-[10px] font-medium opacity-100">Dashboard</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-muted hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">collections_bookmark</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-muted hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">leaderboard</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-text-muted hover:text-white transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">person</span>
+</a>
+</div>
+</nav>
+
+</body></html>

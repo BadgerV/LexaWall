@@ -67,8 +67,8 @@ class FlashcardsViewModel(application: Application) : AndroidViewModel(applicati
             val sessions = PrefsManager.getFlashcardSessionsToday(appContext)
             val competitive = PrefsManager.isCompetitiveModeEnabled(appContext)
             val limit = if (competitive) 1 else 2
-            val timer = if (competitive) 7 else 12
-            val dailyWords = DailyWordPool.getDailyWords(appContext, wordDao)
+            val timer = if (competitive) 5 else 15
+            val dailyWords = DailyWordPool.getFlashcardWords(appContext, wordDao)
 
             _sessionsToday.value = sessions
             _isCompetitiveMode.value = competitive

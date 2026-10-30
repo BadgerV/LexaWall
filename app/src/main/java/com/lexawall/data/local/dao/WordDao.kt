@@ -31,4 +31,7 @@ interface WordDao {
 
     @Query("SELECT * FROM words WHERE id NOT IN (:excludeIds) ORDER BY RANDOM() LIMIT :count")
     suspend fun getWanderWords(excludeIds: List<String>, count: Int): List<WordEntity>
+
+    @Query("DELETE FROM words")
+    suspend fun clearAll()
 }

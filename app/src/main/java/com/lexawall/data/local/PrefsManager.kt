@@ -12,7 +12,9 @@ object PrefsManager {
     private const val KEY_ROTATION_SPEED = "rotation_speed"
     private const val KEY_WORDS_V2_MIGRATED = "words_v2_migrated"
     private const val KEY_FLASHCARD_SESSIONS_TODAY = "flashcard_sessions_today"
+    private const val KEY_FLASHCARD_SESSION_COUNT = "flashcard_session_count"
     private const val KEY_FLASHCARD_SESSION_DATE = "flashcard_session_date"
+    private const val KEY_FLASHCARD_LIMIT_NOTICE_DATE = "flashcard_limit_notice_date"
     private const val KEY_PENDING_GRADUATION_WORD_ID = "pending_graduation_word_id"
     private const val KEY_PENDING_QUIZ_END_SCORE = "pending_quiz_end_score"
     private const val KEY_PENDING_QUIZ_END_TOTAL = "pending_quiz_end_total"
@@ -24,11 +26,23 @@ object PrefsManager {
     private const val KEY_WALLPAPER_SET = "wallpaper_set"
     private const val KEY_COMPETITIVE_MODE = "competitive_mode"
     private const val KEY_WALLPAPER_OPTED_OUT = "wallpaper_opted_out"
+    private const val KEY_LAST_WALLPAPER_ROTATION_AT = "last_wallpaper_rotation_at"
     private const val KEY_WANDER_DATE = "wander_date"
     private const val KEY_WANDER_WORD_IDS = "wander_word_ids"
     private const val KEY_WANDER_SEEN_ALL_IDS = "wander_seen_all_ids"
     private const val KEY_DAILY_POOL_DATE = "daily_pool_date"
     private const val KEY_DAILY_POOL_WORD_IDS = "daily_pool_word_ids"
+    private const val KEY_WALLPAPER_QUIZ_OPTED_IN = "wallpaper_quiz_opted_in"
+    private const val KEY_WALLPAPER_QUIZ_COUNT_TODAY = "wallpaper_quiz_count_today"
+    private const val KEY_LAST_WALLPAPER_QUIZ_TIME = "last_wallpaper_quiz_time"
+    private const val KEY_NEXT_WALLPAPER_QUIZ_TRIGGER_TIME = "next_wallpaper_quiz_trigger_time"
+    private const val KEY_HABIT_STACK_HOUR = "habit_stack_hour"
+    private const val KEY_CUSTOM_IMAGE_PATH = "custom_image_path"
+    private const val KEY_CUSTOM_IMAGE_ENABLED = "custom_image_enabled"
+    private const val KEY_SELECTED_AVATAR_OUTFIT = "selected_avatar_outfit"
+    private const val KEY_SHOW_AVATAR_ON_WALLPAPER = "show_avatar_on_wallpaper"
+    private const val KEY_LAST_BONUS_CHALLENGE_COMPLETED_DATE = "last_bonus_challenge_date"
+    private const val KEY_NOTIFICATION_QUIZ_ENABLED = "notification_quiz_enabled"
 
     fun saveUserLevel(context: Context, level: String) {
         prefs(context).edit().putString(KEY_USER_CEFR_LEVEL, level).apply()
@@ -44,6 +58,10 @@ object PrefsManager {
 
     fun isDbSeeded(context: Context): Boolean {
         return prefs(context).getBoolean(KEY_DB_SEEDED, false)
+    }
+
+    fun clearDbSeeded(context: Context) {
+        prefs(context).edit().putBoolean(KEY_DB_SEEDED, false).apply()
     }
 
     fun saveOnboardingComplete(context: Context, value: Boolean) {
@@ -94,12 +112,28 @@ object PrefsManager {
         return prefs(context).getInt(KEY_FLASHCARD_SESSIONS_TODAY, 0)
     }
 
+    fun saveFlashcardSessionCount(context: Context, count: Int) {
+        prefs(context).edit().putInt(KEY_FLASHCARD_SESSION_COUNT, count).apply()
+    }
+
+    fun getFlashcardSessionCount(context: Context): Int {
+        return prefs(context).getInt(KEY_FLASHCARD_SESSION_COUNT, 0)
+    }
+
     fun saveFlashcardSessionDate(context: Context, date: String) {
         prefs(context).edit().putString(KEY_FLASHCARD_SESSION_DATE, date).apply()
     }
 
     fun getFlashcardSessionDate(context: Context): String {
         return prefs(context).getString(KEY_FLASHCARD_SESSION_DATE, "") ?: ""
+    }
+
+    fun saveFlashcardLimitNoticeDate(context: Context, date: String) {
+        prefs(context).edit().putString(KEY_FLASHCARD_LIMIT_NOTICE_DATE, date).apply()
+    }
+
+    fun getFlashcardLimitNoticeDate(context: Context): String {
+        return prefs(context).getString(KEY_FLASHCARD_LIMIT_NOTICE_DATE, "") ?: ""
     }
 
     fun saveGraduationWordId(context: Context, id: String?) {
@@ -177,6 +211,14 @@ object PrefsManager {
         return prefs(context).getBoolean(KEY_WALLPAPER_OPTED_OUT, false)
     }
 
+    fun saveLastWallpaperRotationAt(context: Context, epochMillis: Long) {
+        prefs(context).edit().putLong(KEY_LAST_WALLPAPER_ROTATION_AT, epochMillis).apply()
+    }
+
+    fun getLastWallpaperRotationAt(context: Context): Long {
+        return prefs(context).getLong(KEY_LAST_WALLPAPER_ROTATION_AT, 0L)
+    }
+
     fun saveCompetitiveModeEnabled(context: Context, enabled: Boolean) {
         prefs(context).edit().putBoolean(KEY_COMPETITIVE_MODE, enabled).apply()
     }
@@ -223,6 +265,99 @@ object PrefsManager {
 
     fun getDailyPoolWordIds(context: Context): String {
         return prefs(context).getString(KEY_DAILY_POOL_WORD_IDS, "") ?: ""
+    }
+
+    fun isWallpaperQuizOptedIn(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_WALLPAPER_QUIZ_OPTED_IN, false)
+    }
+
+    fun saveWallpaperQuizOptedIn(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_WALLPAPER_QUIZ_OPTED_IN, value).apply()
+    }
+
+    fun getWallpaperQuizCountToday(context: Context): Int {
+        return prefs(context).getInt(KEY_WALLPAPER_QUIZ_COUNT_TODAY, 0)
+    }
+
+    fun saveWallpaperQuizCountToday(context: Context, count: Int) {
+        prefs(context).edit().putInt(KEY_WALLPAPER_QUIZ_COUNT_TODAY, count).apply()
+    }
+
+    fun getLastWallpaperQuizTime(context: Context): Long {
+        return prefs(context).getLong(KEY_LAST_WALLPAPER_QUIZ_TIME, 0L)
+    }
+
+    fun saveLastWallpaperQuizTime(context: Context, time: Long) {
+        prefs(context).edit().putLong(KEY_LAST_WALLPAPER_QUIZ_TIME, time).apply()
+    }
+
+    fun getNextWallpaperQuizTriggerTime(context: Context): Long {
+        return prefs(context).getLong(KEY_NEXT_WALLPAPER_QUIZ_TRIGGER_TIME, 0L)
+    }
+
+    fun saveNextWallpaperQuizTriggerTime(context: Context, time: Long) {
+        prefs(context).edit().putLong(KEY_NEXT_WALLPAPER_QUIZ_TRIGGER_TIME, time).apply()
+    }
+
+    fun getHabitStackHour(context: Context): Int? {
+        val value = prefs(context).getInt(KEY_HABIT_STACK_HOUR, -1)
+        return if (value == -1) null else value
+    }
+
+    fun saveHabitStackHour(context: Context, hour: Int) {
+        prefs(context).edit().putInt(KEY_HABIT_STACK_HOUR, hour).apply()
+    }
+
+    fun clearHabitStackHour(context: Context) {
+        prefs(context).edit().remove(KEY_HABIT_STACK_HOUR).apply()
+    }
+
+    fun getCustomImagePath(context: Context): String? {
+        return prefs(context).getString(KEY_CUSTOM_IMAGE_PATH, null)
+    }
+
+    fun saveCustomImagePath(context: Context, path: String) {
+        prefs(context).edit().putString(KEY_CUSTOM_IMAGE_PATH, path).apply()
+    }
+
+    fun isCustomImageEnabled(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_CUSTOM_IMAGE_ENABLED, false)
+    }
+
+    fun saveCustomImageEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_CUSTOM_IMAGE_ENABLED, enabled).apply()
+    }
+
+    fun getSelectedAvatarOutfit(context: Context): String {
+        return prefs(context).getString(KEY_SELECTED_AVATAR_OUTFIT, "base") ?: "base"
+    }
+
+    fun saveSelectedAvatarOutfit(context: Context, outfitId: String) {
+        prefs(context).edit().putString(KEY_SELECTED_AVATAR_OUTFIT, outfitId).apply()
+    }
+
+    fun showAvatarOnWallpaper(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_SHOW_AVATAR_ON_WALLPAPER, true)
+    }
+
+    fun saveShowAvatarOnWallpaper(context: Context, show: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SHOW_AVATAR_ON_WALLPAPER, show).apply()
+    }
+
+    fun getLastBonusChallengeCompletedDate(context: Context): String? {
+        return prefs(context).getString(KEY_LAST_BONUS_CHALLENGE_COMPLETED_DATE, null)
+    }
+
+    fun saveLastBonusChallengeCompletedDate(context: Context, date: String) {
+        prefs(context).edit().putString(KEY_LAST_BONUS_CHALLENGE_COMPLETED_DATE, date).apply()
+    }
+
+    fun isNotificationQuizEnabled(context: Context): Boolean {
+        return prefs(context).getBoolean(KEY_NOTIFICATION_QUIZ_ENABLED, true)
+    }
+
+    fun saveNotificationQuizEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit().putBoolean(KEY_NOTIFICATION_QUIZ_ENABLED, enabled).apply()
     }
 
     private fun prefs(context: Context) =

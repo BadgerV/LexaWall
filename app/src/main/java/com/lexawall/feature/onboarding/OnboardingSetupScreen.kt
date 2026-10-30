@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +37,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.lexawall.core.components.GhostButton
 import com.lexawall.core.components.PrimaryButton
 import com.lexawall.core.navigation.Screen
@@ -44,8 +47,11 @@ import com.lexawall.core.ui.LexaType
 import com.lexawall.core.ui.LexaWallTheme
 import com.lexawall.core.ui.LocalLexaTheme
 import com.lexawall.data.local.PrefsManager
+import com.lexawall.utils.LexaWallLogger
 import com.lexawall.wallpaper.LexaWallWallpaperService
 import com.lexawall.wallpaper.WallpaperSetupUtils
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun OnboardingSetupScreen(
@@ -56,16 +62,40 @@ fun OnboardingSetupScreen(
     val activeTheme = LocalLexaTheme.current
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
     var setupHandled by remember { mutableStateOf(false) }
 
-    fun completeSetupIfWallpaperActive() {
-        if (setupHandled) return
+    fun completeSetupIfWallpaperActive(): Boolean {
+        if (setupHandled) return true
+        LexaWallLogger.d(
+            "LexaWallSetup",
+            "completeSetupIfWallpaperActive check: ${WallpaperSetupUtils.currentComponentDebug(context)}"
+        )
         if (WallpaperSetupUtils.isLexaWallpaperActive(context)) {
             setupHandled = true
             PrefsManager.saveWallpaperSet(context, true)
             PrefsManager.saveOnboardingComplete(context, true)
+            LexaWallLogger.d("LexaWallSetup", "Wallpaper active -> onboarding complete, navigating Home")
             navController.navigate(Screen.Home.route) {
                 popUpTo(Screen.OnboardingSetup.route) { inclusive = true }
+            }
+            return true
+        }
+        LexaWallLogger.d("LexaWallSetup", "Wallpaper not active yet")
+        return false
+    }
+
+    val wallpaperLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) {
+        // when returning from picker, re-check in case user applied or canceled
+        LexaWallLogger.d("LexaWallSetup", "Wallpaper picker returned")
+        if (completeSetupIfWallpaperActive()) return@rememberLauncherForActivityResult
+        scope.launch {
+            repeat(20) {
+                delay(250L)
+                LexaWallLogger.d("LexaWallSetup", "Delayed recheck #${it + 1}")
+                if (completeSetupIfWallpaperActive()) return@launch
             }
         }
     }
@@ -74,14 +104,25 @@ fun OnboardingSetupScreen(
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
                 if (intent?.action == Intent.ACTION_WALLPAPER_CHANGED) {
-                    completeSetupIfWallpaperActive()
+                    LexaWallLogger.d("LexaWallSetup", "Received ACTION_WALLPAPER_CHANGED")
+                    // OEM wallpaper pickers can report component metadata inconsistently right after apply.
+                    // If the system confirmed wallpaper changed, treat setup as complete.
+                    if (!completeSetupIfWallpaperActive()) {
+                        setupHandled = true
+                        PrefsManager.saveWallpaperSet(context, true)
+                        PrefsManager.saveOnboardingComplete(context, true)
+                        LexaWallLogger.d("LexaWallSetup", "Broadcast fallback -> onboarding complete, navigating Home")
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.OnboardingSetup.route) { inclusive = true }
+                        }
+                    }
                 }
             }
         }
 
         val filter = IntentFilter(Intent.ACTION_WALLPAPER_CHANGED)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            context.registerReceiver(receiver, filter, Context.RECEIVER_EXPORTED)
         } else {
             context.registerReceiver(receiver, filter)
         }
@@ -93,6 +134,7 @@ fun OnboardingSetupScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
+                LexaWallLogger.d("LexaWallSetup", "OnboardingSetupScreen ON_RESUME")
                 completeSetupIfWallpaperActive()
             }
         }
@@ -152,8 +194,11 @@ fun OnboardingSetupScreen(
                             )
                         }
                         try {
+                            LexaWallLogger.d("LexaWallSetup", "Launching ACTION_CHANGE_LIVE_WALLPAPER")
                             wallpaperLauncher.launch(intent)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            LexaWallLogger.w("LexaWallSetup", "Live wallpaper picker failed, falling back to ACTION_SET_WALLPAPER")
+                            LexaWallLogger.e("LexaWallSetup", "Picker exception", e)
                             wallpaperLauncher.launch(Intent(Intent.ACTION_SET_WALLPAPER))
                         }
                     })

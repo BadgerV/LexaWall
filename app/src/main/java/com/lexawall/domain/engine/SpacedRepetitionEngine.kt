@@ -1,6 +1,7 @@
 package com.lexawall.domain.engine
 
 import com.lexawall.data.local.entities.UserProgressEntity
+import kotlin.random.Random
 
 class SpacedRepetitionEngine {
     fun advanceWord(progress: UserProgressEntity, cefrLevel: String? = null): UserProgressEntity {
@@ -52,6 +53,8 @@ class SpacedRepetitionEngine {
             .asSequence()
             .filter { it.state == STATE_NEW || it.state == STATE_SEEN || it.state == STATE_TESTED }
             .sortedBy { it.intervalDays }
+            .chunked(5)
+            .flatMap { it.shuffled(Random.Default) }
             .take(MAX_QUIZ_POOL_SIZE)
             .toList()
     }

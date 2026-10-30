@@ -1,16 +1,14 @@
 package com.lexawall.domain.engine
 
 import android.content.Context
-import com.lexawall.data.local.DatabaseModule
 import com.lexawall.data.local.PrefsManager
 import com.lexawall.data.local.dao.WordDao
 import com.lexawall.data.local.entities.WordEntity
 import java.time.LocalDate
+import kotlin.random.Random
 
 object DailyWordPool {
-    private val spacedRepetitionEngine = SpacedRepetitionEngine()
-
-    suspend fun getDailyWords(context: Context, wordDao: WordDao): List<WordEntity> {
+    suspend fun getWallpaperWords(context: Context, wordDao: WordDao): List<WordEntity> {
         val appContext = context.applicationContext
         val today = LocalDate.now().toString()
 
@@ -30,27 +28,26 @@ object DailyWordPool {
             }
         }
 
-        val db = DatabaseModule.getInstance(appContext)
-        val allProgress = db.userProgressDao().getAllProgress()
-        val pool = spacedRepetitionEngine.buildQuizPool(allProgress)
-        val poolIds = pool.map { it.wordId }.distinct()
-
-        val generated = if (poolIds.isNotEmpty()) {
-            val fetched = wordDao.getWordsByIds(poolIds)
-            val byId = fetched.associateBy { it.id }
-            poolIds.mapNotNull { byId[it] }
-        } else {
-            wordDao.getRandomWords(15)
-        }
-
-        val finalWords = if (generated.isEmpty()) {
-            wordDao.getAllWords().take(15)
-        } else {
-            generated
-        }
+        val finalWords = wordDao
+            .getAllWords()
+            .shuffled(Random.Default)
+            .take(25)
 
         PrefsManager.saveDailyPoolDate(appContext, today)
         PrefsManager.saveDailyPoolWordIds(appContext, finalWords.joinToString(",") { it.id })
         return finalWords
+    }
+
+    suspend fun getFlashcardWords(context: Context, wordDao: WordDao): List<WordEntity> {
+        return getWallpaperWords(context, wordDao).take(15)
+    }
+
+    suspend fun getWordDropWords(context: Context, wordDao: WordDao): List<WordEntity> {
+        return getWallpaperWords(context, wordDao).take(10)
+    }
+
+    // Backward compatibility for existing callers; now resolves to flashcard pool (15).
+    suspend fun getDailyWords(context: Context, wordDao: WordDao): List<WordEntity> {
+        return getFlashcardWords(context, wordDao)
     }
 }

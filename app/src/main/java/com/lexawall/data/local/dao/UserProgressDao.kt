@@ -24,6 +24,9 @@ interface UserProgressDao {
     @Query("SELECT * FROM user_progress")
     suspend fun getAllProgress(): List<UserProgressEntity>
 
+    @Query("SELECT * FROM user_progress WHERE lastAnsweredDate = :date")
+    suspend fun getProgressByLastAnsweredDate(date: String): List<UserProgressEntity>
+
     @Query("DELETE FROM user_progress")
     suspend fun clearAll()
 }

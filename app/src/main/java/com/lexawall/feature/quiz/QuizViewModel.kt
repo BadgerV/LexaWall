@@ -14,9 +14,11 @@ import com.lexawall.data.local.entities.LevelEntity
 import com.lexawall.data.local.entities.QuizSessionEntity
 import com.lexawall.data.local.entities.StreakEntity
 import com.lexawall.data.local.entities.UserProgressEntity
+import com.lexawall.data.local.entities.WallpaperQuizSession
 import com.lexawall.data.local.entities.WordEntity
 import com.lexawall.domain.engine.SpacedRepetitionEngine
 import com.lexawall.domain.engine.StreakEngine
+import com.lexawall.domain.engine.BonusChallengeEngine
 import com.lexawall.domain.engine.XpBadges
 import com.lexawall.domain.engine.XpEngine
 import com.lexawall.domain.model.QuizOptionState
@@ -24,7 +26,9 @@ import com.lexawall.domain.repository.QuizRepository
 import com.lexawall.notifications.NotificationScheduler
 import com.lexawall.utils.LexaWallLogger
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.Collections
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +48,7 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
     private val quizRepository: QuizRepository = DatabaseModule.provideQuizRepository(appContext)
     private val spacedRepetitionEngine = SpacedRepetitionEngine()
     private val streakEngine = StreakEngine()
+    private val bonusChallengeEngine = BonusChallengeEngine(appContext)
     private val prefs by lazy {
         appContext.getSharedPreferences("lexawall_prefs", Context.MODE_PRIVATE)
     }
@@ -68,12 +73,26 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
     val lastSessionStreak: StateFlow<Int> = _lastSessionStreak.asStateFlow()
 
     init {
-        val questions = quizRepository.getQuizQuestions()
-        _uiState.update {
-            it.copy(
-                questions = questions,
-                optionStates = List(questions.firstOrNull()?.options?.size ?: 3) { QuizOptionState.Default }
-            )
+        viewModelScope.launch {
+            refreshQuestions(force = true)
+        }
+    }
+
+    suspend fun refreshQuestions(force: Boolean = false) {
+        withContext(Dispatchers.IO) {
+            if (!force && _uiState.value.questions.isNotEmpty()) return@withContext
+
+            val questions = quizRepository.getQuizQuestions()
+            _uiState.update {
+                it.copy(
+                    questions = questions,
+                    currentIndex = 0,
+                    selectedOption = null,
+                    optionStates = List(questions.firstOrNull()?.options?.size ?: 3) {
+                        QuizOptionState.Default
+                    }
+                )
+            }
         }
     }
 
@@ -140,6 +159,45 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
                 if (wordEntity != null && graduatedThisSession.none { it.id == wordEntity.id }) {
                     graduatedThisSession.add(wordEntity)
                 }
+            }
+        }
+    }
+
+    fun recordWallpaperQuizAnswer(wordId: String, wasCorrect: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val xpEarned = if (wasCorrect) 15 else 1
+
+            val currentLevel = runCatching { database.levelDao().getLevel() }
+                .getOrElse {
+                    val fallback = LevelEntity()
+                    database.levelDao().insertOrReplace(fallback)
+                    fallback
+                }
+
+            val oldLevel = XpEngine.getLevelForXp(currentLevel.currentXp)
+            val newCurrentXp = currentLevel.currentXp + xpEarned
+            val newLevel = XpEngine.getLevelForXp(newCurrentXp)
+
+            database.levelDao().updateLevel(
+                currentLevel.copy(
+                    currentXp = newCurrentXp,
+                    totalXpEarned = currentLevel.totalXpEarned + xpEarned,
+                    currentLevel = newLevel.level,
+                    title = newLevel.title
+                )
+            )
+
+            database.wallpaperQuizDao().insertSession(
+                WallpaperQuizSession(
+                    timestamp = LocalDateTime.now().format(TIMESTAMP_FORMATTER),
+                    wordId = wordId,
+                    correct = wasCorrect,
+                    xpEarned = xpEarned
+                )
+            )
+
+            if (newLevel.level > oldLevel.level) {
+                _levelUpEvent.value = LevelUpEvent(newLevel)
             }
         }
     }
@@ -244,6 +302,11 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
+        val bonusChallenge = bonusChallengeEngine.resolveEligibleChallenge()
+        if (bonusChallenge != null && NotificationManagerCompat.from(appContext).areNotificationsEnabled()) {
+            NotificationScheduler.scheduleBonusChallengeNotification(appContext, bonusChallenge)
+        }
+
         val lexa = LexaVoice.generateMessage(
             appContext,
             LexaTrigger.OnQuizComplete(
@@ -293,5 +356,9 @@ class QuizViewModel(application: Application) : AndroidViewModel(application) {
                 )
             )
         }
+    }
+
+    companion object {
+        private val TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     }
 }

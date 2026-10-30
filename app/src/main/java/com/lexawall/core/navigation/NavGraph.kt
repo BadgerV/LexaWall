@@ -20,11 +20,15 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -62,6 +66,7 @@ import com.lexawall.feature.onboarding.OnboardingNotificationsScreen
 import com.lexawall.feature.onboarding.OnboardingSetupScreen
 import com.lexawall.feature.onboarding.OnboardingWallpaperScreen
 import com.lexawall.feature.onboarding.SplashScreen
+import com.lexawall.feature.profile.ProfileScreen
 import com.lexawall.feature.progress.ProgressScreen
 import com.lexawall.feature.quiz.QuizCorrectScreen
 import com.lexawall.feature.quiz.QuizEndScreen
@@ -69,13 +74,16 @@ import com.lexawall.feature.quiz.QuizQuestionScreen
 import com.lexawall.feature.quiz.QuizViewModel
 import com.lexawall.feature.quiz.QuizWrongScreen
 import com.lexawall.feature.quiz.RedemptionQuizScreen
+import com.lexawall.feature.quiz.BonusChallengeScreen
 import com.lexawall.feature.settings.SettingsScreen
 import com.lexawall.feature.settings.ThemePickerScreen
 import com.lexawall.feature.worddetail.MiniQuizFeedbackScreen
 import com.lexawall.feature.worddetail.MiniQuizQuestionScreen
 import com.lexawall.feature.worddetail.WordDetailScreen
+import com.lexawall.feature.voice.VoicePracticeScreen
 import com.lexawall.feature.wander.WanderScreen
 import com.lexawall.feature.wander.WanderWordDetailScreen
+import com.lexawall.feature.wordhunt.WordHuntScreen
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -90,8 +98,72 @@ fun NavGraph(
     val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route.orEmpty()
+    var showFlashcardsLeaveWarning by remember { mutableStateOf(false) }
+    var pendingBottomNavAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     val startDestination = remember(context) {
         if (PrefsManager.isOnboardingComplete(context)) Screen.Home.route else Screen.Splash.route
+    }
+
+    LaunchedEffect(MainActivity.pendingOpenWordDrop.value, currentRoute) {
+        if (MainActivity.pendingOpenWordDrop.value && PrefsManager.isOnboardingComplete(context)) {
+            homeViewModel.markQuizInProgress(true)
+            val targetRoute = Screen.WordDropQuestion.createRoute(0)
+            if (currentRoute != targetRoute) {
+                navController.navigate(targetRoute) {
+                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            MainActivity.pendingOpenWordDrop.value = false
+        }
+    }
+
+    LaunchedEffect(MainActivity.pendingBonusChallengeType.value, currentRoute) {
+        val challengeType = MainActivity.pendingBonusChallengeType.value
+        if (!challengeType.isNullOrBlank() && PrefsManager.isOnboardingComplete(context)) {
+            val targetRoute = Screen.BonusChallenge.createRoute(challengeType)
+            if (currentRoute != targetRoute) {
+                navController.navigate(targetRoute) {
+                    popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+            MainActivity.pendingBonusChallengeType.value = null
+        }
+    }
+
+    fun countFlashcardsExitSession() {
+        val today = LocalDate.now().toString()
+        val savedDate = PrefsManager.getFlashcardSessionDate(context)
+        if (savedDate != today) {
+            PrefsManager.saveFlashcardSessionCount(context, 0)
+            PrefsManager.saveFlashcardSessionDate(context, today)
+        }
+        val currentCount = PrefsManager.getFlashcardSessionCount(context)
+        PrefsManager.saveFlashcardSessionCount(context, currentCount + 1)
+        PrefsManager.saveFlashcardSessionDate(context, today)
+    }
+
+    fun runWithFlashcardsExitGuard(action: () -> Unit) {
+        if (currentRoute.startsWith("flashcards_word")) {
+            val today = LocalDate.now().toString()
+            val savedDate = PrefsManager.getFlashcardSessionDate(context)
+            if (savedDate != today) {
+                action()
+                return
+            }
+            val currentCount = PrefsManager.getFlashcardSessionCount(context)
+            if (currentCount >= 2) {
+                action()
+                return
+            }
+            pendingBottomNavAction = action
+            showFlashcardsLeaveWarning = true
+        } else {
+            action()
+        }
     }
 
     Scaffold(
@@ -101,34 +173,42 @@ fun NavGraph(
                 LexaBottomNavigationBar(
                     currentRoute = currentRoute,
                     onHome = {
-                        homeViewModel.markQuizInProgress(false)
-                        navigateToBottomBarRoute(navController, Screen.Home.route)
+                        runWithFlashcardsExitGuard {
+                            homeViewModel.markQuizInProgress(false)
+                            navigateToBottomBarRoute(navController, Screen.Home.route)
+                        }
                     },
                     onFlashcards = {
                         homeViewModel.markQuizInProgress(false)
                         navigateToBottomBarRoute(navController, Screen.FlashcardsWord.createRoute(0))
                     },
                     onWander = {
-                        homeViewModel.markQuizInProgress(false)
-                        navigateToBottomBarRoute(navController, Screen.Wander.route)
+                        runWithFlashcardsExitGuard {
+                            homeViewModel.markQuizInProgress(false)
+                            navigateToBottomBarRoute(navController, Screen.Wander.route)
+                        }
                     },
                     onProgress = {
-                        homeViewModel.markQuizInProgress(false)
-                        navigateToBottomBarRoute(navController, Screen.Progress.route)
+                        runWithFlashcardsExitGuard {
+                            homeViewModel.markQuizInProgress(false)
+                            navigateToBottomBarRoute(navController, Screen.Progress.route)
+                        }
                     },
                     onSettings = {
-                        homeViewModel.markQuizInProgress(false)
-                        navigateToBottomBarRoute(navController, Screen.Settings.route)
+                        runWithFlashcardsExitGuard {
+                            homeViewModel.markQuizInProgress(false)
+                            navigateToBottomBarRoute(navController, Screen.Settings.route)
+                        }
                     }
                 )
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding)
-        ) {
+        Box(modifier = Modifier.padding(innerPadding)) {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination
+            ) {
             composable(Screen.Splash.route) {
                 SplashScreen(
                     onTimeout = {
@@ -453,6 +533,21 @@ fun NavGraph(
                     quizViewModel = quizViewModel
                 )
             }
+            composable(
+                Screen.BonusChallenge.route,
+                arguments = listOf(navArgument("challengeType") { type = NavType.StringType })
+            ) { entry ->
+                val challengeType = entry.arguments?.getString("challengeType").orEmpty()
+                BonusChallengeScreen(
+                    challengeTypeRaw = challengeType,
+                    onClose = { navController.popBackStack() },
+                    onCompleted = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.BonusChallenge.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
             composable(Screen.FlashcardsWord.route, arguments = listOf(navArgument("cardIndex") { type = NavType.IntType })) { entry ->
                 val idx = entry.arguments?.getInt("cardIndex") ?: 0
                 FlashcardsWordScreen(
@@ -468,7 +563,13 @@ fun NavGraph(
                             popUpTo(Screen.Home.route) { inclusive = false }
                         }
                     },
-                    onClose = { navController.popBackStack() }
+                    onClose = {
+                        navController.navigate(Screen.Home.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                        }
+                    }
                 )
             }
             composable(Screen.FlashcardsSummary.route) {
@@ -490,7 +591,18 @@ fun NavGraph(
                 WordDetailScreen(
                     wordId = wordId,
                     onBack = { navController.popBackStack() },
-                    onQuizMe = { navController.navigate(Screen.MiniWordDropQuestion.createRoute(it)) }
+                    onQuizMe = { navController.navigate(Screen.MiniWordDropQuestion.createRoute(it)) },
+                    onPracticePronunciation = { navController.navigate(Screen.VoicePractice.createRoute(it)) }
+                )
+            }
+            composable(
+                Screen.VoicePractice.route,
+                arguments = listOf(navArgument("wordId") { type = NavType.StringType })
+            ) { entry ->
+                val voiceWordId = entry.arguments?.getString("wordId") ?: "1"
+                VoicePracticeScreen(
+                    wordId = voiceWordId,
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(Screen.MiniWordDropQuestion.route, arguments = listOf(navArgument("wordId") { type = NavType.StringType })) { entry ->
@@ -509,10 +621,32 @@ fun NavGraph(
                 })
             }
             composable(Screen.Settings.route) {
+                val localContext = LocalContext.current
                 SettingsScreen(
                     onBack = { navController.popBackStack() },
                     onThemeTap = { navController.navigate(Screen.ThemePicker.route) },
-                    onLevelChanged = { homeViewModel.refreshData() }
+                    onLevelChanged = { homeViewModel.refreshData() },
+                    onVoicePracticeTap = {
+                        val targetWordId = PrefsManager.getCurrentWordId(localContext)
+                            ?.takeIf { it.isNotBlank() }
+                            ?: "1"
+                        navController.navigate(Screen.VoicePractice.createRoute(targetWordId))
+                    },
+                    onWordHuntTap = { navController.navigate(Screen.WordHunt.route) },
+                    onProfileTap = { navController.navigate(Screen.Profile.route) }
+                )
+            }
+            composable(Screen.Profile.route) {
+                ProfileScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.WordHunt.route) {
+                WordHuntScreen(
+                    onClose = { navController.popBackStack() },
+                    onSuccess = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                        }
+                    }
                 )
             }
             composable(Screen.ThemePicker.route) {
@@ -579,6 +713,42 @@ fun NavGraph(
                         popUpTo(Screen.Home.route) { inclusive = false }
                     }
                 })
+            }
+            }
+
+            if (showFlashcardsLeaveWarning) {
+                AlertDialog(
+                    onDismissRequest = { showFlashcardsLeaveWarning = false },
+                    title = {
+                        Text(
+                            text = "Leave session?",
+                            style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "Leaving now counts as one flashcard session."
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            countFlashcardsExitSession()
+                            showFlashcardsLeaveWarning = false
+                            pendingBottomNavAction?.invoke()
+                            pendingBottomNavAction = null
+                        }) {
+                            Text("Leave")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showFlashcardsLeaveWarning = false
+                            pendingBottomNavAction = null
+                        }) {
+                            Text("Keep practicing")
+                        }
+                    }
+                )
             }
         }
     }
@@ -705,10 +875,10 @@ private fun BottomItem(
 
 private fun navigateToBottomBarRoute(navController: NavHostController, route: String) {
     navController.navigate(route) {
-        launchSingleTop = true
-        restoreState = true
         popUpTo(navController.graph.findStartDestination().id) {
             saveState = true
         }
+        launchSingleTop = true
+        restoreState = true
     }
 }

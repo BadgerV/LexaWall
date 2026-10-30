@@ -3,6 +3,7 @@ package com.lexawall.feature.quiz
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -34,10 +35,29 @@ fun QuizQuestionScreen(
     val context = LocalContext.current
     val uiState by quizViewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
+    var isPreparingSession by remember(questionIndex) { mutableStateOf(true) }
+
     LaunchedEffect(questionIndex) {
         if (questionIndex == 0) {
             quizViewModel.resetQuizSession()
+            quizViewModel.refreshQuestions(force = true)
+        } else {
+            quizViewModel.refreshQuestions(force = false)
         }
+        isPreparingSession = false
+    }
+
+    if (isPreparingSession) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .background(LexaColors.BackgroundDark),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = LexaColors.Primary)
+        }
+        return
     }
 
     if (uiState.questions.isEmpty()) {

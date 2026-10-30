@@ -1,9 +1,8 @@
 package com.lexawall.feature.flashcards
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,25 +16,32 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.compose.BackHandler
 import com.lexawall.core.components.GhostButton
 import com.lexawall.core.components.PrimaryButton
 import com.lexawall.core.ui.DmMono
@@ -43,8 +49,9 @@ import com.lexawall.core.ui.LexaColors
 import com.lexawall.core.ui.LexaType
 import com.lexawall.core.ui.LocalLexaTheme
 import com.lexawall.core.ui.PlayfairDisplay
-import com.lexawall.core.ui.components.LexaMascotAnimated
+import com.lexawall.data.local.PrefsManager
 import kotlinx.coroutines.delay
+import java.time.LocalDate
 
 @Composable
 fun FlashcardsWordScreen(
@@ -55,20 +62,47 @@ fun FlashcardsWordScreen(
     onClose: () -> Unit,
     viewModel: FlashcardsViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     val theme = LocalLexaTheme.current
     val words by viewModel.words.collectAsState()
-    val isLocked by viewModel.isLocked.collectAsState()
-    val sessionsToday by viewModel.sessionsToday.collectAsState()
-    val sessionLimit by viewModel.sessionLimit.collectAsState()
-    val timerSeconds by viewModel.timerSeconds.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val timerSeconds by viewModel.timerSeconds.collectAsState()
+    val isCompetitiveMode by viewModel.isCompetitiveMode.collectAsState()
+    val sessionLimit by viewModel.sessionLimit.collectAsState()
 
-    var currentIndex by remember { mutableIntStateOf(cardIndex.coerceAtLeast(0)) }
-    var showSessionEnd by remember { mutableStateOf(false) }
-    var endMessage by remember { mutableStateOf("That's a session.") }
-    var sessionsRemainingInEndState by remember { mutableIntStateOf(0) }
+    var gateReady by remember { mutableStateOf(false) }
+    var isPracticeLocked by remember { mutableStateOf(false) }
+    var showLeaveWarning by remember { mutableStateOf(false) }
+    var showDailyLimitInfo by remember { mutableStateOf(false) }
 
-    if (isLoading) {
+    fun countExitAsSession() {
+        val today = LocalDate.now().toString()
+        val savedDate = PrefsManager.getFlashcardSessionDate(context)
+        if (savedDate != today) {
+            PrefsManager.saveFlashcardSessionCount(context, 0)
+            PrefsManager.saveFlashcardSessionDate(context, today)
+        }
+        val currentCount = PrefsManager.getFlashcardSessionCount(context)
+        PrefsManager.saveFlashcardSessionCount(context, currentCount + 1)
+        PrefsManager.saveFlashcardSessionDate(context, today)
+    }
+
+    LaunchedEffect(Unit) {
+        val today = LocalDate.now().toString()
+        val savedDate = PrefsManager.getFlashcardSessionDate(context)
+        if (savedDate != today) {
+            PrefsManager.saveFlashcardSessionCount(context, 0)
+            PrefsManager.saveFlashcardSessionDate(context, today)
+        }
+        val todayCount = PrefsManager.getFlashcardSessionCount(context)
+        val competitive = PrefsManager.isCompetitiveModeEnabled(context)
+        isPracticeLocked = todayCount >= (if (competitive) 1 else 2)
+        val infoDate = PrefsManager.getFlashcardLimitNoticeDate(context)
+        showDailyLimitInfo = !isPracticeLocked && infoDate != today
+        gateReady = true
+    }
+
+    if (!gateReady || isLoading) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -81,12 +115,11 @@ fun FlashcardsWordScreen(
         return
     }
 
-    if (isLocked) {
-        FlashcardsLockedState(
-            sessionLimit = sessionLimit,
-            onStartWordDrop = { onKnowIt(0, true) },
-            onComeBackTomorrow = onClose
-        )
+    if (isPracticeLocked) {
+        BackHandler(enabled = true) {
+            onClose()
+        }
+        FlashcardsPracticeGateScreen(onBackToHome = onClose)
         return
     }
 
@@ -102,60 +135,98 @@ fun FlashcardsWordScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("No words ready yet.", style = LexaType.bodyLarge, color = LexaColors.TextPrimary)
                 Spacer(Modifier.height(16.dp))
-                PrimaryButton("Do today's Word Drop →", onClick = { onKnowIt(0, true) })
+                PrimaryButton("Back to home", onClick = onClose)
             }
         }
         return
     }
 
-    if (showSessionEnd) {
-        FlashcardsSessionEndState(
-            message = endMessage,
-            sessionsRemaining = sessionsRemainingInEndState,
-            onGoAgain = {
-                showSessionEnd = false
-                currentIndex = 0
+    if (showDailyLimitInfo) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .background(Color(theme.surfaceColor))
+        )
+        AlertDialog(
+            onDismissRequest = {
+                val today = LocalDate.now().toString()
+                PrefsManager.saveFlashcardLimitNoticeDate(context, today)
+                showDailyLimitInfo = false
             },
-            onStartWordDrop = { onKnowIt(0, true) },
-            onComeBackTomorrow = onClose
+            title = {
+                Text(
+                    text = "Flashcard daily limit",
+                    style = LexaType.titleMedium,
+                    color = LexaColors.TextPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = if (isCompetitiveMode) {
+                        "Competitive mode: 1 fast session per day (${timerSeconds}s per card). Leaving after starting counts as your session."
+                    } else {
+                        "You can run $sessionLimit flashcard sessions per day. If you leave after starting, that counts as one session."
+                    },
+                    style = LexaType.bodyMedium,
+                    color = LexaColors.TextMuted
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val today = LocalDate.now().toString()
+                        PrefsManager.saveFlashcardLimitNoticeDate(context, today)
+                        showDailyLimitInfo = false
+                    }
+                ) {
+                    Text("Got it", color = LexaColors.Primary)
+                }
+            },
+            containerColor = LexaColors.SurfaceDark
         )
         return
     }
 
-    val safeIndex = currentIndex.coerceIn(0, words.lastIndex)
+    BackHandler(enabled = true) {
+        showLeaveWarning = true
+    }
+
+    val safeIndex = cardIndex.coerceIn(0, words.lastIndex)
     val word = words[safeIndex]
-    val isLast = safeIndex == words.lastIndex
-    var secondsRemaining by remember(safeIndex, timerSeconds) { mutableIntStateOf(timerSeconds) }
-    val progress by animateFloatAsState(
-        targetValue = (secondsRemaining.toFloat() / timerSeconds.toFloat()).coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 900, easing = LinearEasing),
-        label = "flashcardTimerProgress"
-    )
+    val isLastCard = safeIndex == words.lastIndex
 
-    fun completeSession() {
-        val updatedCount = sessionsToday + 1
-        viewModel.completeSession()
-        sessionsRemainingInEndState = (sessionLimit - updatedCount).coerceAtLeast(0)
-        endMessage = listOf("That's a session.", "Words seen.", "You showed up.").random()
-        showSessionEnd = true
-    }
-
-    fun advanceCard() {
-        if (isLast) {
-            completeSession()
+    fun advanceToNextCard() {
+        if (isLastCard) {
+            onStillLearning(safeIndex, true)
         } else {
-            currentIndex += 1
+            onStillLearning(safeIndex + 1, false)
         }
     }
 
-    LaunchedEffect(safeIndex, showSessionEnd, timerSeconds) {
-        if (showSessionEnd) return@LaunchedEffect
-        secondsRemaining = timerSeconds
-        while (secondsRemaining > 0) {
-            delay(1000)
-            secondsRemaining -= 1
+    var timerProgress by remember(safeIndex) { mutableFloatStateOf(1f) }
+    var revealTriggered by remember(safeIndex) { mutableStateOf(false) }
+    var timerCancelled by remember(safeIndex) { mutableStateOf(false) }
+
+    val totalSteps = remember(timerSeconds) { timerSeconds * 10 }
+    val decrementPerStep = remember(totalSteps) { 1f / totalSteps.toFloat() }
+
+    LaunchedEffect(safeIndex, timerSeconds) {
+        timerProgress = 1f
+        revealTriggered = false
+        timerCancelled = false
+
+        repeat(totalSteps) {
+            delay(100)
+            if (timerCancelled || revealTriggered) return@LaunchedEffect
+            timerProgress = (timerProgress - decrementPerStep).coerceAtLeast(0f)
         }
-        advanceCard()
+
+        if (!timerCancelled && !revealTriggered) {
+            timerProgress = 0f
+            revealTriggered = true
+            advanceToNextCard()
+        }
     }
 
     Column(
@@ -164,19 +235,51 @@ fun FlashcardsWordScreen(
             .statusBarsPadding()
             .background(Color(theme.surfaceColor))
     ) {
-        LinearProgressIndicator(
-            progress = { progress },
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(2.dp),
-            color = Color(theme.accentColor),
-            trackColor = Color(0xFF1E1E2A)
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Canvas(modifier = Modifier.size(42.dp)) {
+                drawArc(
+                    color = Color(theme.accentColor).copy(alpha = 0.2f),
+                    startAngle = -90f,
+                    sweepAngle = 360f,
+                    useCenter = false,
+                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                )
+                drawArc(
+                    color = Color(theme.accentColor),
+                    startAngle = -90f,
+                    sweepAngle = 360f * timerProgress,
+                    useCenter = false,
+                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                )
+            }
+        }
+        Text(
+            text = if (isCompetitiveMode) "Competitive: $timerSeconds sec/card · $sessionLimit session/day" else "Daily limit: $sessionLimit sessions · ${timerSeconds}s per card",
+            style = LexaType.bodySmall.copy(fontFamily = DmMono, fontSize = 11.sp),
+            color = LexaColors.TextMuted,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
         )
 
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
+                .clickable {
+                    if (!revealTriggered) {
+                        timerCancelled = true
+                        timerProgress = 0f
+                        revealTriggered = true
+                        onReveal()
+                    }
+                }
         ) {
             Spacer(Modifier.height(12.dp))
             Text(
@@ -219,7 +322,7 @@ fun FlashcardsWordScreen(
                 Text(
                     text = word.exampleSentence,
                     style = LexaType.bodyMedium.copy(fontStyle = FontStyle.Italic, fontSize = 14.sp),
-                    color = Color(0xFFAAAAAA)
+                    color = Color(0xFFCCCCCC)
                 )
             }
         }
@@ -229,28 +332,54 @@ fun FlashcardsWordScreen(
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp, vertical = 24.dp)
         ) {
-            PrimaryButton("Next →", onClick = { advanceCard() })
+            PrimaryButton("Next →", onClick = {
+                timerCancelled = true
+                advanceToNextCard()
+            })
         }
     }
+
+    if (showLeaveWarning) {
+        AlertDialog(
+            onDismissRequest = { showLeaveWarning = false },
+            title = {
+                Text(
+                    text = "Leave session?",
+                    style = LexaType.titleMedium,
+                    color = LexaColors.TextPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = if (isCompetitiveMode) "Leaving now uses your only session for today." else "Leaving now counts as one flashcard session. You only have $sessionLimit per day.",
+                    style = LexaType.bodyMedium,
+                    color = LexaColors.TextMuted
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        countExitAsSession()
+                        showLeaveWarning = false
+                        onClose()
+                    }
+                ) {
+                    Text("Leave", color = LexaColors.Primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLeaveWarning = false }) {
+                    Text("Keep practicing", color = LexaColors.TextSecondary)
+                }
+            },
+            containerColor = LexaColors.SurfaceDark
+        )
+    }
+
 }
 
 @Composable
-private fun FlashcardsLockedState(
-    sessionLimit: Int,
-    onStartWordDrop: () -> Unit,
-    onComeBackTomorrow: () -> Unit
-) {
-    val title = if (sessionLimit == 1) {
-        "You've seen today's words."
-    } else {
-        "You've seen today's words twice."
-    }
-    val subtitle = if (sessionLimit == 1) {
-        "That's your session for today."
-    } else {
-        "That's your two sessions for today."
-    }
-
+private fun FlashcardsPracticeGateScreen(onBackToHome: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -260,69 +389,31 @@ private fun FlashcardsLockedState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        LexaMascotAnimated(size = 48.dp)
+        Icon(
+            imageVector = Icons.Default.Schedule,
+            contentDescription = null,
+            tint = LexaColors.Primary,
+            modifier = Modifier.size(28.dp)
+        )
         Spacer(Modifier.height(16.dp))
         Text(
-            title,
-            style = LexaType.wordMedium.copy(fontStyle = FontStyle.Italic, fontSize = 18.sp),
-            color = Color.White,
+            "You've practiced twice today.",
+            style = LexaType.headlineLarge.copy(
+                fontFamily = PlayfairDisplay,
+                fontSize = 24.sp,
+                fontStyle = FontStyle.Italic
+            ),
+            color = LexaColors.Primary,
             textAlign = TextAlign.Center
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            subtitle,
-            style = LexaType.bodySmall.copy(fontSize = 13.sp),
-            color = Color(0xFF888899),
+            "Come back after your quiz for more practice.",
+            style = LexaType.bodyMedium,
+            color = LexaColors.TextMuted,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.height(20.dp))
-        PrimaryButton("Do today's Word Drop →", onStartWordDrop)
-        Spacer(Modifier.height(8.dp))
-        GhostButton("Come back tomorrow", onComeBackTomorrow)
-    }
-}
-
-@Composable
-private fun FlashcardsSessionEndState(
-    message: String,
-    sessionsRemaining: Int,
-    onGoAgain: () -> Unit,
-    onStartWordDrop: () -> Unit,
-    onComeBackTomorrow: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .background(LexaColors.BackgroundDark)
-            .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        LexaMascotAnimated(size = 48.dp)
         Spacer(Modifier.height(16.dp))
-        Text(
-            message,
-            style = LexaType.wordMedium.copy(fontStyle = FontStyle.Italic, fontSize = 18.sp),
-            color = Color.White,
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            if (sessionsRemaining == 1) "You have one more session today." else "That's both sessions for today.",
-            style = LexaType.bodySmall.copy(fontSize = 13.sp),
-            color = Color(0xFF888899),
-            textAlign = TextAlign.Center
-        )
-        Spacer(Modifier.height(20.dp))
-        if (sessionsRemaining > 0) {
-            PrimaryButton("Go again →", onGoAgain)
-            Spacer(Modifier.height(8.dp))
-            GhostButton("Do today's Word Drop →", onStartWordDrop)
-        } else {
-            PrimaryButton("Do today's Word Drop →", onStartWordDrop)
-            Spacer(Modifier.height(8.dp))
-            GhostButton("Come back tomorrow", onComeBackTomorrow)
-        }
+        GhostButton("Back to home", onClick = onBackToHome)
     }
 }

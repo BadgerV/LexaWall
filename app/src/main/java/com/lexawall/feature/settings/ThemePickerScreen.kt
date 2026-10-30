@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.widget.Toast
 import com.lexawall.core.ui.DmMono
 import com.lexawall.core.ui.LexaType
 import com.lexawall.core.ui.LexaWallTheme
@@ -64,6 +65,7 @@ fun ThemePickerScreen(
     val context = LocalContext.current
     val themeState = LocalLexaThemeState.current
     val activeTheme = LocalLexaTheme.current
+    val customBackgroundEnabled = remember(context) { PrefsManager.isCustomImageEnabled(context) }
     val currentXp by viewModel.currentXp.collectAsState()
     val unlockedKeys = remember(currentXp) { XpEngine.getAllUnlockedThemes(currentXp).toSet() }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -102,6 +104,7 @@ fun ThemePickerScreen(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier
                     .fillMaxSize()
+                    .alpha(if (customBackgroundEnabled) 0.4f else 1f)
                     .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -115,6 +118,14 @@ fun ThemePickerScreen(
                         unlocked = isUnlocked,
                         requiredTitle = requiredTitle(theme.unlockLevel)
                     ) {
+                        if (customBackgroundEnabled) {
+                            Toast.makeText(
+                                context,
+                                "Disable custom background to change themes.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@ThemeCell
+                        }
                         if (!isUnlocked) {
                             scope.launch {
                                 snackbarHostState.showSnackbar(

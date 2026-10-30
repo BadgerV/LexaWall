@@ -9,6 +9,7 @@ data class Word(
     val exampleSentence: String,
     val pronunciation: String = "",
     val etymology: String = "",
+    val lexaSays: String? = null,
 )
 
 data class QuizQuestion(

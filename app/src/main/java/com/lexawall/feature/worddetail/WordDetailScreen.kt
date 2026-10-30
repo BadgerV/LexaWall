@@ -3,6 +3,7 @@ package com.lexawall.feature.worddetail
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -36,7 +37,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun WordDetailScreen(wordId: String, onBack: () -> Unit, onQuizMe: (String) -> Unit) {
+fun WordDetailScreen(
+    wordId: String,
+    onBack: () -> Unit,
+    onQuizMe: (String) -> Unit,
+    onPracticePronunciation: (String) -> Unit
+) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val activeTheme = LocalLexaTheme.current
     val db = remember { DatabaseModule.getInstance(context) }
@@ -105,13 +111,17 @@ fun WordDetailScreen(wordId: String, onBack: () -> Unit, onQuizMe: (String) -> U
                     )
                     IconButton(
                         onClick = { LexaSpeaker.speak(context, safeWord.word) },
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier
+                            .padding(start = 6.dp)
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(22.dp))
+                            .background(LexaColors.Primary.copy(alpha = 0.16f))
                     ) {
                         Icon(
                             imageVector = Icons.Default.VolumeUp,
                             contentDescription = "Pronounce word",
                             tint = LexaColors.Primary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -126,14 +136,72 @@ fun WordDetailScreen(wordId: String, onBack: () -> Unit, onQuizMe: (String) -> U
                 }
                 Spacer(Modifier.height(24.dp))
                 if (!safeWord.etymology.isNullOrEmpty()) Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) { Text("ETYMOLOGY", style = LexaType.overlineSmall, color = LexaColors.TextSecondary); Spacer(Modifier.height(8.dp)); Text(safeWord.etymology ?: "", style = LexaType.bodyMedium, color = LexaColors.TextMuted, textAlign = TextAlign.Center) }
+                if (!safeWord.lexaSays.isNullOrBlank()) {
+                    Spacer(Modifier.height(24.dp))
+                    Box(
+                        modifier = Modifier
+                            .width(48.dp)
+                            .height(1.dp)
+                            .background(LexaColors.Primary.copy(alpha = 0.2f))
+                    )
+                    Spacer(Modifier.height(14.dp))
+                    Text(
+                        text = "LEXA SAYS",
+                        style = LexaType.overline.copy(fontFamily = DmMono, fontSize = 10.sp),
+                        color = LexaColors.Primary
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(2.dp)
+                                .fillMaxHeight()
+                                .background(LexaColors.Primary.copy(alpha = 0.4f))
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            text = safeWord.lexaSays.orEmpty(),
+                            style = LexaType.bodyLarge.copy(
+                                fontFamily = PlayfairDisplay,
+                                fontSize = 16.sp,
+                                fontStyle = FontStyle.Italic
+                            ),
+                            color = LexaColors.TextSecondary,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
                 Spacer(Modifier.height(100.dp))
             }
         }
-        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Brush.verticalGradient(listOf(LexaColors.BackgroundDark.copy(alpha = 0f), LexaColors.BackgroundDark, LexaColors.BackgroundDark))).padding(horizontal = 24.dp).padding(top = 48.dp, bottom = 24.dp)) {
-            PrimaryButton(
-                text = "Word Drop this",
-                onClick = { onQuizMe(safeWord.id) }
-            )
+        Box(
+            Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            LexaColors.BackgroundDark.copy(alpha = 0f),
+                            LexaColors.BackgroundDark,
+                            LexaColors.BackgroundDark
+                        )
+                    )
+                )
+                .padding(horizontal = 24.dp)
+                .padding(top = 48.dp, bottom = 24.dp)
+        ) {
+            Column(Modifier.fillMaxWidth()) {
+                GhostButton(
+                    text = "Practice Pronunciation",
+                    onClick = { onPracticePronunciation(safeWord.id) }
+                )
+            }
         }
         IconButton(
             onClick = onBack,
@@ -153,4 +221,4 @@ fun WordDetailScreen(wordId: String, onBack: () -> Unit, onQuizMe: (String) -> U
 }
 
 @Preview(showBackground = true, widthDp = 390, heightDp = 844)
-@Composable private fun Preview() { LexaWallTheme { WordDetailScreen("ephemeral", {}, {}) } }
+@Composable private fun Preview() { LexaWallTheme { WordDetailScreen("ephemeral", {}, {}, {}) } }

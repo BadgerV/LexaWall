@@ -3,7 +3,6 @@ package com.lexawall.data.local.repository
 import android.content.Context
 import com.lexawall.data.local.dao.UserProgressDao
 import com.lexawall.data.local.dao.WordDao
-import com.lexawall.data.local.PrefsManager
 import com.lexawall.data.local.entities.WordEntity
 import com.lexawall.domain.engine.DailyWordPool
 import com.lexawall.domain.engine.SpacedRepetitionEngine
@@ -29,24 +28,12 @@ class RoomQuizRepository(
             if (allWords.size < 3) {
                 return@withContext emptyList()
             }
-            val dailyWords = DailyWordPool.getDailyWords(context, wordDao)
+            val dailyWords = DailyWordPool.getWordDropWords(context, wordDao)
             if (dailyWords.isEmpty()) {
                 return@withContext emptyList()
             }
 
-            val wallpaperWordId = PrefsManager.getCurrentWordId(context)
-            val orderedWords = dailyWords.toMutableList()
-            if (!wallpaperWordId.isNullOrBlank()) {
-                val existingIndex = orderedWords.indexOfFirst { it.id == wallpaperWordId }
-                if (existingIndex > 0) {
-                    val wallpaperWord = orderedWords.removeAt(existingIndex)
-                    orderedWords.add(0, wallpaperWord)
-                } else if (existingIndex < 0) {
-                    wordDao.getWordById(wallpaperWordId)?.let { orderedWords.add(0, it) }
-                }
-            }
-
-            orderedWords
+            dailyWords
                 .distinctBy { it.id }
                 .mapNotNull { wordEntity ->
                     buildQuizQuestion(wordEntity, allWords)

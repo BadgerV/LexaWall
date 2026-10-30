@@ -37,7 +37,8 @@ class RoomWordRepository(
                 definition = "",
                 exampleSentence = "",
                 pronunciation = "",
-                etymology = ""
+                etymology = "",
+                lexaSays = null
             )
         }
     }
@@ -53,7 +54,8 @@ class RoomWordRepository(
                 definition = "",
                 exampleSentence = "",
                 pronunciation = "",
-                etymology = ""
+                etymology = "",
+                lexaSays = null
             )
         }
     }
@@ -99,7 +101,8 @@ class RoomWordRepository(
             definition = definition,
             exampleSentence = exampleSentence,
             pronunciation = pronunciationIpa.orEmpty(),
-            etymology = etymology.orEmpty()
+            etymology = etymology.orEmpty(),
+            lexaSays = lexaSays
         )
     }
 }

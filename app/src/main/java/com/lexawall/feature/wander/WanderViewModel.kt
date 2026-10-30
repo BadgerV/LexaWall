@@ -71,7 +71,17 @@ class WanderViewModel(application: Application) : AndroidViewModel(application) 
                 } else {
                     val fetched = db.wordDao().getWordsByIds(savedIds)
                     val byId = fetched.associateBy { it.id }
-                    savedIds.mapNotNull { byId[it] }
+                    val ordered = savedIds.mapNotNull { byId[it] }
+                    if (ordered.isEmpty()) {
+                        val fallback = db.wordDao().getRandomWords(50)
+                        PrefsManager.saveWanderWordIds(
+                            appContext,
+                            fallback.joinToString(",") { it.id }
+                        )
+                        fallback
+                    } else {
+                        ordered
+                    }
                 }
             }
 

@@ -15,5 +15,6 @@ data class WordEntity(
     val notificationLine1: String,
     val notificationLine2: String,
     val pronunciationIpa: String?,
-    val etymology: String?
+    val etymology: String?,
+    val lexaSays: String? = null
 )

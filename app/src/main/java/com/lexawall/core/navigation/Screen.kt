@@ -21,6 +21,9 @@ sealed class Screen(val route: String) {
     data object WordDropEnd : Screen("word_drop_end/{score}/{total}/{streak}/{xp}") {
         fun createRoute(score: Int, total: Int, streak: Int, xp: Int) = "word_drop_end/$score/$total/$streak/$xp"
     }
+    data object BonusChallenge : Screen("bonus_challenge/{challengeType}") {
+        fun createRoute(challengeType: String) = "bonus_challenge/$challengeType"
+    }
     data object LevelUp : Screen("level_up/{newTitle}/{unlockedTheme}/{unlockedWordTier}") {
         fun createRoute(newTitle: String, unlockedTheme: String, unlockedWordTier: String): String {
             return "level_up/${android.net.Uri.encode(newTitle)}/${android.net.Uri.encode(unlockedTheme)}/${android.net.Uri.encode(unlockedWordTier)}"
@@ -34,6 +37,10 @@ sealed class Screen(val route: String) {
     data object WordDetail : Screen("word_detail/{wordId}") {
         fun createRoute(wordId: String) = "word_detail/$wordId"
     }
+    data object WordHunt : Screen("word_hunt")
+    data object VoicePractice : Screen("voice_practice/{wordId}") {
+        fun createRoute(wordId: String) = "voice_practice/$wordId"
+    }
     data object WanderWordDetail : Screen("wander_word_detail/{wordIndex}") {
         fun createRoute(wordIndex: Int) = "wander_word_detail/$wordIndex"
     }
@@ -43,6 +50,7 @@ sealed class Screen(val route: String) {
     data object MiniWordDropFeedback : Screen("mini_word_drop_feedback/{wordId}/{isCorrect}") {
         fun createRoute(wordId: String, isCorrect: Boolean) = "mini_word_drop_feedback/$wordId/$isCorrect"
     }
+    data object Profile : Screen("profile")
     data object Settings : Screen("settings")
     data object ThemePicker : Screen("theme_picker")
     data object Graduation : Screen("graduation/{wordId}") {

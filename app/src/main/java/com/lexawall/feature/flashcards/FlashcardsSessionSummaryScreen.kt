@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.lexawall.core.components.*
 import com.lexawall.core.ui.*
 import com.lexawall.data.local.DatabaseModule
+import com.lexawall.data.local.PrefsManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -30,6 +32,16 @@ import java.time.LocalDate
 @Composable
 fun FlashcardsSessionSummaryScreen(onStartQuiz: () -> Unit, onBackToHome: () -> Unit) {
     val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            val today = LocalDate.now().toString()
+            val currentCount = PrefsManager.getFlashcardSessionCount(context)
+            PrefsManager.saveFlashcardSessionCount(context, currentCount + 1)
+            PrefsManager.saveFlashcardSessionDate(context, today)
+        }
+    }
+
     val todayQuizDone by produceState(initialValue = false) {
         value = withContext(Dispatchers.IO) {
             val today = LocalDate.now().toString()

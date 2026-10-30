@@ -33,9 +33,6 @@ import com.lexawall.core.ui.LexaWallTheme
 import com.lexawall.core.ui.PlayfairDisplay
 import com.lexawall.data.local.PrefsManager
 import com.lexawall.domain.model.QuizOptionState
-import java.util.Collections
-import java.util.Random
-import kotlin.random.Random as KotlinRandom
 import kotlinx.coroutines.delay
 
 data class CalibrationQuestion(
@@ -106,13 +103,11 @@ fun CalibrationQuizScreen(onComplete: () -> Unit) {
     var currentIndex by rememberSaveable { mutableIntStateOf(0) }
     var selectedOption by remember(currentIndex) { mutableIntStateOf(-1) }
     var correctCount by rememberSaveable { mutableIntStateOf(0) }
-    val shuffleSeed = rememberSaveable { KotlinRandom(System.currentTimeMillis()).nextInt() }
     val shuffledQuestions = remember {
-        calibrationQuestions.shuffled(KotlinRandom(shuffleSeed)).mapIndexed { index, question ->
+        calibrationQuestions.shuffled().map { question ->
             val indexedOptions = question.options
                 .mapIndexed { optionIndex, option -> optionIndex to option }
-                .toMutableList()
-            Collections.shuffle(indexedOptions, Random((shuffleSeed + index).toLong()))
+                .shuffled()
             val shuffledOptions = indexedOptions.map { it.second }
             val shuffledCorrectIndex = indexedOptions.indexOfFirst { it.first == question.correctIndex }
             question.copy(options = shuffledOptions, correctIndex = shuffledCorrectIndex)

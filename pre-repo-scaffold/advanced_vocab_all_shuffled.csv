@@ -1,0 +1,101 @@
+id,word,part_of_speech,cefr_level,definition,example_sentence,notification_line_1,notification_line_2
+1,aberration,noun,C1,departure from what is normal,"The sudden heatwave was an aberration in spring.",Noted an aberration in the data,You noticed the deviation
+51,laconic,adjective,C1,using few words to express much,"His laconic reply revealed little interest.",A laconic answer closed the discussion,You kept it concise
+2,abjure,verb,C1,formally renounce a belief or claim,"He chose to abjure his earlier political vows.",She publicly abjured her previous stance,You changed your stated position
+52,lachrymose,adjective,C1,tending to cause tears or mournful,"The film's ending felt unexpectedly lachrymose.",Lachrymose passages softened the memoir,You felt the sadness
+3,abstruse,adjective,C1,difficult to understand because obscure,"Her lecture explored abstruse philosophical problems.",Abstruse ideas dominated the evening discussion,You found it challenging to follow
+53,lamentable,adjective,C1,deserving strong criticism or regret,"The decision had lamentable consequences for students.",This lapse produced lamentable results,You regretted the outcome
+4,acquiesce,verb,C1,accept reluctantly but without protest,"They acquiesced to the committee's modest demands.",He quietly acquiesced to management's request,You did not oppose it
+54,languid,adjective,C1,displaying slow, relaxed physical movement,"She moved with a languid, deliberate grace.",A languid afternoon followed the conference,You slowed your pace
+5,acumen,noun,C1,keen insight and good judgment,"Her financial acumen saved the company millions.",His acumen guided the investment strategy,You judged the situation well
+55,latent,adjective,C1,existing but not yet visible or active,"He suspected a latent talent for painting.",Latent risks surfaced during the audit,You noticed hidden problems
+6,admonish,verb,C1,advise or reprimand gently,"The editor admonished the writer about accuracy.",She admonished him for loose citations,You were corrected calmly
+56,laudable,adjective,C1,worthy of praise or commendation,"Her charity work earned laudable recognition.",A laudable effort improved community services,You admired the commitment
+7,aesthetic,adjective,C1,concerned with beauty or appearance,"The building's aesthetic appealed to international critics.",Aesthetic choices shaped the gallery's display,You appreciated the visual design
+57,lethargic,adjective,C1,sluggish and lacking energy or enthusiasm,"After travel, everyone felt lethargic and slow.",Lethargic responses slowed the team's progress,You experienced low energy
+8,alacrity,noun,C1,cheerful readiness or eagerness,"She accepted the invitation with surprising alacrity.",He completed the task with alacrity,You responded quickly and willingly
+58,litany,noun,C1,a long, tedious recital or list,"The speech became a litany of complaints.",A litany of errors marked the chapter,You counted the failures
+9,ambivalent,adjective,C1,having mixed or conflicting feelings,"She felt ambivalent about accepting promotion.",Ambivalence complicated her decision-making,You felt two ways
+59,loquacious,adjective,C1,tending to talk a great deal,"The professor was unexpectedly loquacious at dinner.",A loquacious guest dominated the panel,You listened more than spoke
+10,ameliorate,verb,C1,make a situation better or less bad,"Policy changes aim to ameliorate housing shortages.",Measures began to ameliorate living conditions,You observed modest improvements
+60,lugubrious,adjective,C1,excessively mournful or gloomy in tone,"His lugubrious mood darkened the proceedings.",A lugubrious passage slowed the book,You felt the gloom
+11,anomaly,noun,C1,something that deviates from the norm,"The scientist noted an anomaly in the data.",An anomaly disrupted the predictable pattern,You spotted the irregularity
+61,magnanimous,adjective,C1,generous in forgiving others' offenses,"She remained magnanimous toward former rivals.",A magnanimous gesture eased longstanding tensions,You forgave more easily
+12,ascertain,verb,C1,find out with certainty,"We must ascertain the facts before publishing.",Reporters worked to ascertain the source,You verified the details
+62,malevolent,adjective,C1,showing desire to harm others,"The character's motives proved unexpectedly malevolent.",Malevolent forces complicated the narrative arc,You sensed ill intent
+13,asperity,noun,C1,severe or harsh quality of tone,"His reply carried notable asperity and distance.",Asperity crept into the once gentle conversation,You sensed the harshness
+63,malaise,noun,C1,a general feeling of unease or discomfort,"An early malaise affected the research team.",A sense of malaise permeated the office,You felt unsettled
+14,assuage,verb,C1,lessen intensity of an unpleasant feeling,"She tried to assuage their mounting anxieties.",Warm words helped assuage his fears,You felt somewhat reassured
+64,mendacity,noun,C1,the tendency to be untruthful,"Investigations exposed a pattern of mendacity.",His mendacity undermined public trust,You doubted his statements
+15,audacious,adjective,C1,willing to take bold risks,"The audacious plan surprised cautious investors.",An audacious proposal challenged the committee,You admired the boldness
+65,mercurial,adjective,C1,subject to rapid mood or change,"Her mercurial temperament surprised close colleagues.",Mercurial shifts affected editorial policy,You adapted to the swings
+16,benevolent,adjective,C1,well meaning and kindly,"The foundation made several benevolent grants locally.",A benevolent donor funded the scholarships,You noticed generous intent
+66,mitigate,verb,C1,make less severe or painful,"New measures attempt to mitigate income inequality.",This step helped mitigate immediate damages,You reduced the harm
+17,burgeon,verb,C1,grow or expand rapidly,"Startups burgeoned in the creative district.",Interest in the movement began to burgeon,You observed rapid growth
+67,moribund,adjective,C1,in state of decline or near death,"The industry felt moribund last winter.",A moribund company sought radical reform,You noticed the stagnation
+18,cacophony,noun,C1,harsh, jarring mixture of sounds,"The city street produced a constant cacophony.",A cacophony erupted outside the conference hall,You heard chaotic noise
+68,munificent,adjective,C1,extremely generous in giving,"The benefactor's munificent gift transformed the program.",A munificent grant enabled new scholarships,You benefited from generosity
+19,candor,noun,C1,honesty or frankness of expression,"She answered with refreshing candor and detail.",His candor shifted the tone of interviews,You heard blunt honesty
+69,nebulous,adjective,C1,vague or ill-defined in meaning,"His proposal remained frustratingly nebulous throughout.",Nebulous goals confused the development team,You needed clearer aims
+20,capricious,adjective,C1,subject to sudden unpredictable changes,"The capricious weather ruined weekend plans.",Capricious impulses affected editorial decisions,You noticed the unpredictability
+70,nefarious,adjective,C1,wicked or criminal in intent,"Investigators uncovered a nefarious trafficking scheme.",Nefarious motives explained the sudden changes,You now saw malice
+21,caustic,adjective,C1,severely critical or sarcastic,"Her caustic review discouraged emerging authors.",A caustic remark halted the discussion,You felt the sting
+71,nicety,noun,C1,a small or subtle detail,"They argued over a technical nicety in law.",A nicety altered the contract's interpretation,You noticed the nuance
+22,clandestine,adjective,C1,kept secret or done secretly,"They held clandestine meetings after dusk.",Clandestine notes surfaced in the investigation,You learned of hidden meetings
+72,nonplussed,adjective,C1,utterly perplexed and unsure how respond,"She was nonplussed by the allegation.",Nonplussed reactions followed the unexpected verdict,You stood momentarily stunned
+23,cogent,adjective,C1,clear, logical, and convincing,"He offered cogent reasons for the amendment.",Her cogent argument persuaded the committee,You found the case convincing
+73,obdurate,adjective,C1,stubbornly refusing to change opinion,"He remained obdurate despite clear evidence.",Obdurate resistance stalled the negotiations,You pressed against refusal
+24,cogitate,verb,C1,think deeply about something,"He paused to cogitate before replying.",She cogitated on the manuscript overnight,You considered it carefully
+74,obfuscate,verb,C1,make unclear or unintelligible deliberately,"Complex terms served to obfuscate the policy.",Legalese can obfuscate simple obligations,You saw deliberate hiding
+25,corroborate,verb,C1,confirm or give support to a statement,"Multiple witnesses corroborated the scientist's timeline.",New records corroborated her earlier testimony,You verified the claim
+75,obsequious,adjective,C1,excessively eager to please or flatter,"The assistant's obsequious manner felt disingenuous.",Obsequious praise irritated senior staff,You sensed the flattery
+26,crescendo,noun,C1,gradual increase to a peak,"Debate built to a rhetorical crescendo.",Tension reached a dramatic crescendo at noon,You felt escalating intensity
+76,obstreperous,adjective,C1,noisy and difficult to control,"The protest turned obstreperous outside Parliament.",Obstreperous behavior disrupted the seminar,You found it chaotic
+27,delineate,verb,C1,describe or portray precisely,"The report delineates responsibilities clearly.",The paper delineates the project's scope,You saw precise boundaries
+77,odious,adjective,C1,extremely unpleasant or repulsive,"The plan's motives seemed odious to many.",An odious comparison soured the discussion,You recoiled at the image
+28,demur,verb,C1,raise doubts or show reluctance,"She demurred when asked to sign immediately.",Several members demurred at the proposal,You hesitated to agree
+78,onerous,adjective,C1,difficult and burdensome to endure,"The new regulations proved legally onerous.",Onerous reporting requirements strained the staff,You felt overburdened
+29,despondent,adjective,C1,in low spirits from loss of hope,"After rejection, he appeared unusually despondent.",The team grew despondent after setbacks,You felt drained and hopeless
+79,opprobrium,noun,C1,severe public criticism or disgrace,"The scandal brought intense opprobrium upon him.",Opprobrium followed the executive's misconduct,You observed public condemnation
+30,didactic,adjective,C1,intended to teach moral lessons,"The novel's tone turned didactic in places.",Didactic passages slowed the narrative momentum,You sensed the teaching intent
+80,ostensible,adjective,C1,seeming or appearing to be true superficially,"The ostensible reason concealed deeper motives.",Ostensible calm masked real anxiety,You questioned the surface explanation
+31,dissonance,noun,C1,lack of agreement or harmony,"There was dissonance between policy and practice.",Cultural dissonance complicated the community meeting,You noticed the mismatch
+81,ostentatious,adjective,C1,designed to attract notice or impress,"Her ostentatious display felt unnecessarily lavish.",An ostentatious gesture drew critical attention,You noticed the showiness
+32,effusive,adjective,C1,expressing feelings unrestrainedly,"She received effusive praise from critics.",The review was effusive about the production,You read warm praise
+82,palliate,verb,C1,reduce severity without curing completely,"Short-term aid can palliate immediate suffering.",Measures merely palliated the chronic problems,You eased symptoms briefly
+33,elucidate,verb,C1,make something clear or explain,"The professor elucidated complex legal theories succinctly.",Notes helped elucidate the dense argument,You understood it better
+83,panacea,noun,C1,a supposed universal remedy for problems,"Technology is not a panacea for inequality.",No single panacea solves structural challenges,You avoided simplistic fixes
+34,empirical,adjective,C1,based on observation or experience,"The study used empirical evidence extensively.",They sought empirical support for claims,You relied on observed data
+84,paradox,noun,C1,a seemingly self-contradictory statement revealing truth,"The study presented an intriguing paradox about growth.",This paradox challenged accepted assumptions,You rethought the premise
+35,enervate,verb,C1,drain someone of energy or vitality,"Long debates enervated the once eager volunteers.",The heat enervated the outdoor crew,You felt unusually weak
+85,parsimonious,adjective,C1,extremely unwilling to spend resources,"The committee adopted a parsimonious budgeting approach.",Parsimonious funding limited experimental projects,You tightened expenditure controls
+36,engender,verb,C1,cause or give rise to,"Policy missteps engendered widespread public distrust.",Poor timing engendered unnecessary suspicion,You contributed to growing doubt
+86,paucity,noun,C1,scarcity or smallness in quantity,"A paucity of data hindered conclusions.",Paucity of evidence weakened the claim,You lacked sufficient proof
+37,ephemeral,adjective,C1,lasting for a very short time,"The bloom's beauty proved ephemeral this season.",Ephemeral trends dominated the magazine's columns,You noticed their briefness
+87,pedantic,adjective,C1,overly concerned with minor rules or formality,"His pedantic corrections annoyed the students.",A pedantic tone alienated wider readership,You focused too narrowly
+38,equivocate,verb,C1,use ambiguous language to avoid commitment,"He equivocated when questioned about finances.",Officials tended to equivocate on sensitive topics,You sensed evasiveness
+88,perfidious,adjective,C1,deliberately faithless and treacherous,"The ambassador proved perfidious in secret dealings.",Perfidious acts destroyed the fragile alliance,You felt deeply betrayed
+39,esoteric,adjective,C1,intended for or understood by few,"The essay referenced esoteric literary theories.",A few readers appreciated the esoteric references,You recognized niche arguments
+89,perfunctory,adjective,C1,carried out with minimal effort or care,"Her inspection was perfunctory and rushed.",A perfunctory review missed key errors,You overlooked important flaws
+40,euphemism,noun,C1,mild term used to soften harsh reality,"They used a euphemism to avoid bluntness.",The memo relied on euphemism for layoffs,You noticed softened language
+90,pernicious,adjective,C1,harmful in a subtle, gradual way,"Misinformation has pernicious social consequences.",Pernicious rhetoric eroded civic trust,You recognized the subtle damage
+41,exacerbate,verb,C1,make a problem or situation worse,"Delays only exacerbated the supply chain crisis.",Criticism exacerbated tensions within the team,You made matters worse
+91,perspicacious,adjective,C1,having keen mental perception and understanding,"The critic offered perspicacious observations on style.",A perspicacious reader grasped hidden themes,You inferred deeper meanings
+42,excoriate,verb,C1,criticize severely and publicly,"The columnist excoriated the policy's moral failures.",Reviewers excoriated the film's weak structure,You read harsh condemnation
+92,pertinacious,adjective,C1,holding firmly to an opinion or course,"She remained pertinacious in defending principles.",Pertinacious focus drove long-term progress,You persevered despite doubt
+43,fastidious,adjective,C1,very attentive to detail and cleanliness,"She is fastidious about manuscript formatting.",Fastidious editors demand exact citations,You noticed obsessive precision
+93,peruse,verb,C1,read thoroughly and carefully,"He perused the manuscript for several hours.",She perused the report for inconsistencies,You examined it closely
+44,fortuitous,adjective,C1,happening by fortunate chance,"A fortuitous meeting led to their collaboration.",A fortuitous discovery changed the project's course,You benefited from luck
+94,phlegmatic,adjective,C1,self-possessed and unemotional in temperament,"His phlegmatic response surprised the crowd.",A phlegmatic demeanor steadied the panel,You maintained calm composure
+45,gregarious,adjective,C1,enjoying others' company sociably,"He became more gregarious after returning home.",The event attracted gregarious personalities throughout,You joined the social group
+95,portentous,adjective,C1,significantly weighty or ominously important,"The speech felt portentous and overblown.",Portentous claims raised public alarm,You noticed the ominous tone
+46,hubris,noun,C1,excessive pride or self-confidence,"The leader's hubris precipitated strategic errors.",Hubris undermined the previously careful planning,You recognized the overconfidence
+96,pragmatic,adjective,C1,dealing with matters realistically and practically,"They adopted a pragmatic compromise to proceed.",A pragmatic solution saved the stalled project,You chose workable steps
+47,iconoclast,noun,C1,one who challenges established beliefs,"She earned a reputation as an iconoclast.",An iconoclast disrupted long-standing traditions,You questioned conventional wisdom
+97,predilection,noun,C1,a preference or special liking for something,"She has a predilection for archival research.",A predilection influenced editorial selection,You favored certain themes
+48,immutable,adjective,C1,unchanging over time,"Certain cultural assumptions seemed immutable then.",Attitudes once immutable began to shift,You observed steady resistance
+98,prevaricate,verb,C1,avoid telling the truth deliberately,"He continued to prevaricate under cross-examination.",Officials tended to prevaricate around sensitive questions,You detected evasions
+49,impassioned,adjective,C1,filled with intense emotion,"He delivered an impassioned plea for reform.",An impassioned speech rallied supporters,You felt the emotional force
+99,prosaic,adjective,C1,lacking imaginative or poetic beauty; ordinary,"The account felt disappointingly prosaic and flat.",Prosaic language dulled the powerful story,You wished for livelier prose
+50,impervious,adjective,C1,not affected or influenced by something,"She remained impervious to the harsher critiques.",The critique left him seemingly impervious,You stayed emotionally distant
+100,protean,adjective,C1,readily changing form or character,"Her protean talent suited many different projects.",A protean approach improved team adaptability,You shifted roles easily
